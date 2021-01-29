@@ -2,7 +2,7 @@
 
 ¡Bienvenidos a la clase número 1!
 
-Durante este curso van a aprender qué es una API REST, como construir una API REST y como probarla. A lo largo de las clases vamos a ir armando una API QUE HACE X
+Durante este curso van a aprender qué es una API REST, como construir una API REST y como probarla. A lo largo de las clases vamos a ir armando una API QUE HACE X. Durante las clases vamos a estar usando la palabra `terminal`, en este caso va a ser sinónimo de `consola`, y es la consola o terminal de la computadora que estén usando.
 
 Los temas de esta clase son:
   * [Qué es una API](#que-es-una-api)
@@ -14,8 +14,6 @@ Los temas de esta clase son:
 ***
 
 ## Que es una API
-
-Antes que nada, vamos a ver que es una *API*. Hoy en día se escucha mucho el término, pero es normal que uno no sepa lo que es si nunca lo investigó. 
 
 Una *API* es una **Application Programming Interface**. Básciamente es un intermediario entre 2 aplicaciones que necesitan comunicarse.
 
@@ -130,9 +128,186 @@ Para que una API sea considerada *REST* o *RESTful* debe cumplir una serie de [c
 
 *¿Por qué haríamos una API REST?* --> Seguir estos principios garantiza que la API sea más rápida y liviana, al mismo tiempo que es más escalable.
 
+### Recursos
+
 ***
 
 ## Que es Django
+
+[Django](https://www.djangoproject.com/) es un framework de alto nivel de Python que alienta el desarrollo rápido y el diseño limpio de aplicaciones. Además es gratis y open-source.
+
+Tiene un gran variedad de paquetes disponibles para no tener que reinventar cosas que ya existen, y se usa mucho porque es rápido, seguro y escalable.
+
+Instagram, Pinterest y Mozilla, entre otros, usan Django.
+
+### Como empezar con Django
+
+Es muy simple crear un proyecto de Django, vamos a empezar por crear nuestro proyecto de API.
+
+**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y checkear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
+```bash
+# Crear el env
+virtualenv ./cs_env
+# Activarlo
+source ./cs_env/bin/activate
+# Ver versión de python
+python --version
+```
+
+En una terminal, muevanse al directorio que quieran usar e instalen django (si tienen experiencia con virtualenvs en Python, es recomendable que lo hagan en un virtualenv):
+```bash
+pip install django
+```
+
+Ahora vamos a crear el proyecto en sí, el nombre del proyecto sería "cs_api":
+```bash
+django-admin startproject cs_api
+```
+
+Este comando debería generar una carpeta con la siguiente estructura:
+```
+cs_api/
+├── cs_api
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+└── manage.py
+```
+
+En Django, cada vez que uno hace un cambio a un modelo de la base de datos, tenemos que correr las "migraciones". Estas [migraciones](https://docs.djangoproject.com/en/3.1/topics/migrations/) son la forma de Django de propagar la información a la base de datos.
+
+Ahora, dentro de la primera carpeta "cs_api" (vamos a estar trabajando desde ahi con la terminal desde ahora), corremos el siguiente comando para hacer las migraciones:
+```bash
+python manage.py makemigrations && python manage.py migrate
+```
+
+Para correr el proycto, simplemente se usa el comando `runserver` de Django:
+```bash
+python manage.py runserver
+```
+
+Y el siguiente mensaje debería aparecer:
+```
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+January 29, 2021 - 18:51:25
+Django version 3.1.5, using settings 'cs_api.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
+
+Ya tenemos Django corriendo, podemos verlo si entramos desde un browser a `http://localhost:8000/`. Luego de ver que haya andado bien, vamos a apagar al servidor apretando `ctrl + c` para poder continuar.
+
+### Consola de Admin
+
+Django tiene 2 partes, lo que uno codea y hace disponible, y la consola de admin (que se puede desactivar). Por ahora vamos a concentrarnos en la consola de admin.
+
+Esta consola sirve para administrar las tablas y configuraciones de Django. Para poder entrar necesitamos un usuario con el rol "superuser", y vamos a crearlo.
+
+Para poder crear a este usuario, hay que correr el siguiente comando:
+```bash
+python manage.py createsuperuser
+```
+
+Este comando va a generar que la terminal pida un nombre de usuario, mail y contraseña, hay que completar esto. Debería verse así:
+```
+Username (leave blank to use 'gonzalo'): gonzalo
+Email address: ghirsch@itba.edu.ar
+Password: 
+Password (again): 
+Superuser created successfully
+```
+
+Una vez creado el usuario volvemos a correr el servidor (`python manage.py runserver`) y desde un browser entramos a `http://localhost:8000/admin/login/` y nos logueamos con el usuario que acabamos de crear. Deberían ver algo así:
+![Django admin](resources/clase-1/django_admin.png "Django admin")
+
+Actualmente solo vamos a poder ver a los usuarios y a los grupos, que son los roles que puede tener un usuario (que no hay roles cargados).
+
+Si se ponen a investigar, van a ver que el único usuario que aparece es el usuario que creamos, que tiene marcado que es staff y superuser.
+
+### Como crear la API
+
+Para poder empezar a hacer cosas más interesantes, necesitamos agrergar una aplicación a nuestro proyecto de Django, la API. 
+
+Para poder hacer esto, vamos a usar el siguiente comando, que se encarga de crear nuestra api que se va a llamar "api":
+```bash
+python manage.py startapp api
+```
+
+Esto va a generar una nueva carpeta llamada "api", y toda nuestra carpeta del proyecto se va a ver así:
+```
+cs_api/
+├── api
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+├── cs_api
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── settings.cpython-38.pyc
+│   │   ├── urls.cpython-38.pyc
+│   │   └── wsgi.cpython-38.pyc
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── db.sqlite3
+└── manage.py
+```
+
+Ahora hay que registrar a nuestra api dentro del archivo `cs_api/settings.py`, y lo hacemos cambiando *INSTALLED_APPS*:
+```python
+INSTALLED_APPS = [
+    'api.apps.ApiConfig',
+    ... # Dejar el resto de lo que estaba listado
+]
+```
+
+Ahora corremos el proyecto otra vez para ver que todo esté en orden:
+```bash
+python manage.py runserver
+```
+
+### Cuales son los contenidos de lo que creamos
+
+Estuvimos creando muchas cosas, y se agregaron muchos archivos, vamos a ver para que sirve cada uno:
+```
+cs_api/ --> Carpeta del proyecto
+├── api --> Carpeta de nuestra api
+│   ├── __init__.py
+│   ├── admin.py --> Registrar modelos así aparecen en la consola de admin
+│   ├── apps.py --> App que se registra en settings.py
+│   ├── migrations --> Carpeta de migraciones de la base de datos (no modificamos)
+│   │   └── __init__.py
+│   ├── models.py --> Definir modelos de la api
+│   ├── tests.py --> Escribir los tests
+│   └── views.py --> Definir los endpoints
+├── cs_api --> Carpeta de configuración del proyecto
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── settings.cpython-38.pyc
+│   │   ├── urls.cpython-38.pyc
+│   │   └── wsgi.cpython-38.pyc
+│   ├── asgi.py --> Configuraciones (no modificamos)
+│   ├── settings.py --> Configuraciones del proyecto
+│   ├── urls.py --> Urls del proycto
+│   └── wsgi.py --> Configuraciones (no modificamos)
+├── db.sqlite3 --> Base de datos en SQLite
+└── manage.py --> Scripts para correr, migrar y otras cosas (no hace falta modificar)
+```
+
+Es importante notar que todo lo que es Models, Views y Tests no necesariamente tiene que estar dentro de esos archivos, sinó que puede estar en subcarpetas.
 
 ***
 ## Como se arma un endpoint
