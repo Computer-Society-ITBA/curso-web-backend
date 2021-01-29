@@ -128,7 +128,19 @@ Para que una API sea considerada *REST* o *RESTful* debe cumplir una serie de [c
 
 *¿Por qué haríamos una API REST?* --> Seguir estos principios garantiza que la API sea más rápida y liviana, al mismo tiempo que es más escalable.
 
-### Recursos
+### Recursos y URLs
+
+Hay ciertas convenciones que se siguen para un buen diseño de una API REST.
+1. Las URLs contienen sustantivos solo, no verbos.
+    - Las urls serían del estilo `/api/users` y no `/api/user` o `/api/users/create`
+2. Los sustantivos están en plural para consistencia.
+3. Aprovechar los verbos HTTP para hacer que sea más legible.
+    - Para crear un usuario se usa un POST a `/api/users`, de forma que la url es corta y entendible
+    - Si se quiere obtener a todos los usuarios es GET a `/api/users`, pero para un usuario particular es GET a `/api/users/<id>`
+4. Usar los status codes para hacer referencia a los resultados de forma más intuitiva.
+    - Si se crea un objeto, por ejemplo, no responder con 200 (OK), responder con 204 (No Content), ya que no hay contenido que se buscó
+
+Si hay una clara jerarquía en las urls, se puede usar, siempre y cuando no quedé muy grande. Por ejemplo, si los usuarios tienen fotos, la jerarquía puede ser `/api/users/<id>/fotos`, pero si cada foto tiene tags, usar `/api/users/<id>/fotos/<pid>/tags` es muy largo y engorroso. En ese caso conviene tener hasta `/api/users/<id>` y `/api/fotos/<pid>/tags`, de forma que queda más simple.
 
 ***
 
@@ -310,5 +322,218 @@ cs_api/ --> Carpeta del proyecto
 Es importante notar que todo lo que es Models, Views y Tests no necesariamente tiene que estar dentro de esos archivos, sinó que puede estar en subcarpetas.
 
 ***
+
 ## Como se arma un endpoint
 
+Para poder armar un endpoint, hace falta tener una función dentro de "views" y registrar la función con su url dentro de "urls".
+
+### Instalar DjangoRestFramework
+
+Para poder empezar a ver como se arma un endpoint, tenemos que instalar un paquete, el [djangorestframework](https://www.django-rest-framework.org/):
+```bash
+pip install djangorestframework
+````
+
+Este paquete se usa para crear APIs especialmente.
+
+Y ahora falta agregarlo a la lista de *INSTALLED_APPS* dentro de `cs_api/settings.py`:
+```python
+INSTALLED_APPS = [
+    # Dejar igual el resto de las installed apps
+    ...
+    'rest_framework',
+]
+```
+
+### Crear una View
+
+Dentro de `api/views.py` vamos a crear una función `test_get`:
+```python
+# Imports necesarios
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
+@api_view(['GET'])
+def test_get(request):
+    return Response({"hello": "world"}, status=status.HTTP_200_OK)
+```
+
+La parte `@api_view` es un "decorator", en Django vamos a usar este decorator para definir el método con que se puede usar este endpoint. Se puede especificar 1 o más métodos, separados por `,`. Por ejemplo, si queremos que acepte GET y POST, sería `@api_view(['GET', 'POST'])`, y en caso de pegarle con un PUT, devuelve una respuesta con 405 (Method Not Allowed).
+
+La parte `return Response({"hello": "world"}, status=status.HTTP_200_OK)` se ocupa de devolver el mapa `{"hello": "world"}` en el body de la respuesta, y especificamos también el status con `status=status.HTTP_200_OK`. En este caso simplemente devolvemos un 200 porque está todo bien.
+
+La función recibe una `request`, que tiene información sobre le HTTP request, como headers y el body.
+
+### Registar la URL
+
+Una vez creada la view, simplemente hay que importarla en `cs_api/urls.py` y agregarla de la siguiente manera:
+```python
+import api.views as views
+...
+urlpatterns = [
+    ...
+    path('api/test', views.test_get, name='test_get')
+]
+```
+
+La parte `'api/test'` es la url a la que va a estar mappeada nuestra view, para acceder usaríamos `localhost:8000/api/test` con un GET.
+
+La parte `views.test_get` indica que la función que usamos es la que definimos antes.
+
+La parte `name='test_get'` sirve como un nombre alternativo a la url, por si se busca referenciarla directo por nombre.
+
+Es **importante** notar que el orden de las URLs importa, Django usa la función que primero matchea con la url. Por ejemplo, si tenemos las urls declaradas de esta forma:
+```python
+urlpatterns = [
+    ...
+    path('api/foo/bar', ...)
+    path('api/foo', ...)
+]
+```
+
+La url `'api/foo/bar'` matchea para la request que vaya a `'api/foo/bar'` y para la que vaya a `'api/foo'`. 
+
+En cambio, si definimos las urls de esta forma:
+```python
+urlpatterns = [
+    ...
+    path('api/foo', ...)
+    path('api/foo/bar', ...)   
+]
+```
+
+Cada request va a matchear bien con la URL que corresponde.
+
+### Probarlo
+
+Una vez agregada la url, volvemos a correr el proyecto (`python manage.py runserver`) y probamos con Curl el endpoint:
+```bash
+curl localhost:8000/api/test
+```
+
+Deberían obtener esto:
+```
+{"hello":"world"}
+```
+
+## Ejemplos de Endpoints
+
+Hay diferentes formas de pasarle información a un endpoint:
+- Path Params --> Se usa una url de este estilo `/api/users/10`, en donde `10` es el ID del usuario, y es un Path Param
+- Query Params --> Se usa una url de este estilo `/api/users?q=hola&p=1`, en donde hay 2 query params, `q` y `p`, separados por un `&` y separados de la url con un `?`
+- Body --> Es el cuerpo de la request
+- Form --> El cuerpo de la request, pero va con un formato especial
+
+Como armamos un endpoint con Path Params:
+```python
+# api/views.py
+@api_view(['GET'])
+def test_get_path_param(request, id):
+    # El parametro id se pone en los parametros de la funcion
+    return Response({"hello": id}, status=status.HTTP_200_OK)
+
+# cs_api/urls.py
+urlpatterns = [
+    ...,
+    # Agregamos <TIPO:NOMBRE>, y usamos un int con nombre 'id'
+    path('api/test/<int:id>', views.test_get_path_param, name='test_get_path_param') 
+]
+
+# Probamos con curl y vemos que aparece el numero en la respuesta
+curl localhost:8000/api/test/40
+curl localhost:8000/api/test/20
+```
+
+Como armamos un endpoint con Query Params (por default todos los query params se reciben como string):
+```python
+# api/views.py
+@api_view(['GET'])
+def test_get_query_param(request):
+    # Obtenemos el parametro 'q', y si no viene se le pone 'default'
+    q = request.GET.get('q', 'default')
+    return Response({"hello": q}, status=status.HTTP_200_OK)
+
+# cs_api/urls.py
+urlpatterns = [
+    ...,
+    path('api/test/query', views.test_get_query_param, name='test_get_query_param'),
+]
+
+# Probamos con curl y vemos que aparece el parametro en la respuesta
+curl localhost:8000/api/test/query?q=hola
+curl localhost:8000/api/test/query?q=chau
+curl localhost:8000/api/test/query
+```
+
+Como armamos un endpoint con Body:
+```python
+# api/views.py
+@api_view(['POST'])
+def test_post_body(request):
+    # El body se encuentra en "request.data"
+    return Response({"hello": request.data}, status=status.HTTP_200_OK)
+
+# cs_api/urls.py
+urlpatterns = [
+    ...,
+    path('api/test/body', views.test_post_body, name='test_post_body'),
+]
+
+# Probamos con curl y vemos que aparece el body en la respuesta
+curl --header "Content-Type: application/json" -XPOST --data '{"username":"xyz","password":"xyz"}' http://localhost:8000/api/test/body
+curl --header "Content-Type: application/json" -XPOST --data '{"computer":"society","django":"itba"}' http://localhost:8000/api/test/body
+curl --header "Content-Type: application/json" -XPOST http://localhost:8000/api/test/body
+```
+
+## Ejercicios
+
+Además del endpoint que se pide, incluyan diferentes casos para probar (con Curl incluido), e ideas de que puede romper al endpoint.
+
+### Ejercicio 1 - Endpoint que Suma
+
+Armar un endpoint GET que tenga la url `/api/suma` que tenga 2 query params (`l` y `r`), y devuelva un JSON con el resultado de esta forma: `{"resultado": N}`. 
+
+Se debería poder llamar así con Curl:
+```
+# Llamado
+curl 'localhost:8000/api/suma?l=10&r=20'
+# Respuesta
+{"resultado": 30.0}
+```
+
+No hace falta validar los parámetros
+
+### Ejercicio 2 - Endpoint que Suma 2
+
+Armar un endpoint PUT que tenga la url `/api/suma-mas` que reciba en el body, un JSON de esta forma `{"sums": [1, 2, 3, N]}`. Recibe una lista de números que tiene que sumar. Se espera que devuelva un JSON con el resultado de esta forma: `{"resultado": N}`.
+
+Se debería poder llamar así con Curl:
+```
+# Llamado
+curl --header "Content-Type: application/json" -XPUT --data '{"sums":[1,2,3,4,5,6]}' http://localhost:8000/api/suma-mas
+# Respuesta
+{"resultado": 21}
+```
+
+### Ejercicio 3 - Endpoint Bueno y Malo
+
+Armar un endpoint POST que tenga la url `/api/bueno` que reciba en el body, un JSON de esta forma `{"n": N}` y tenga 1 query param (`limit`). Recibe un único número en el body, y un único número de query param. Se espera que devuelva el código 200 si el número es mayor o igual que el query param `limit`, sinó un codigo 400 si es menor. Por default el limite es 10.
+
+Se debería poder llamar así con Curl:
+```
+# Llamado
+curl -i --header "Content-Type: application/json" -XPOST --data '{"n":10}' http://localhost:8000/api/bueno?limit=11
+# Respuesta
+HTTP/1.1 400 Bad Request
+
+# Llamado
+curl -i --header "Content-Type: application/json" -XPOST --data '{"n":10}' http://localhost:8000/api/bueno?limit=8
+# Respuesta
+HTTP/1.1 200 OK
+
+# Llamado
+curl -i --header "Content-Type: application/json" -XPOST --data '{"n":10}' http://localhost:8000/api/bueno
+# Respuesta
+HTTP/1.1 200 OK
+```
