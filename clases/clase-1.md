@@ -20,7 +20,10 @@ Una *API* es una **Application Programming Interface**. Básciamente es un inter
 Se puede pensar la siguiente analogía:
 
 ```
-Imaginense que están en un restaurante y tienen un menú para elegir. La cocina (o "server") va a preparar lo que ustedes pidan. Uno no va directamente a la cocina a pedir comida, necesita de un mozo (o "API") para poder comunicarle su pedido a la cocina. El mozo toma el pedido (o "request") y se lo lleva a la cocina, que una vez que prepara la comida (o "response"), se la devuelve al mozo y el mozo te lo lleva a tu mesa (o "cliente").
+Imaginense que están en un restaurante y tienen un menú para elegir. 
+La cocina (o "server") va a preparar lo que ustedes pidan. 
+Uno no va directamente a la cocina a pedir comida, necesita de un mozo (o "API") para poder comunicarle su pedido a la cocina. 
+El mozo toma el pedido (o "request") y se lo lleva a la cocina, que una vez que prepara la comida (o "response"), se la devuelve al mozo y el mozo te lo lleva a tu mesa (o "cliente").
 ```
 
 Una *API* se usa porque provee una mayor seguridad al servidor que está detrás de la misma, además de simplificar la comunicación entre el cliente y el servidor. 
