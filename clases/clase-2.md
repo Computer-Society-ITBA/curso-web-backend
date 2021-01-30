@@ -76,6 +76,8 @@ Este *Token* lo vamos a enviar en un header de la request de la siguiente manera
 Authorization: Bearer <TOKEN>
 ```
 
+***
+
 ## JWT Tokens
 
 Hay muchos diferentes tipos de *Tokens*, pero nosotros queremos que nuestra API sea realmente REST, por lo que vamos a usar **JWT Tokens** (*Jason Web Tokens*).
@@ -112,3 +114,50 @@ Siempre van a tener esta forma: `xxxxx.yyyyy.zzzzz` (son más largos, pero tiene
 En nuestro caso, cuando hagamos un *log in*, la API va a generar un JWT Token para el usuario y es lo que nos responde si el log in fue exitoso.
 
 Una vez que tenemos el token, cuando hagamos una request a la API, lo primero que va a hacer es ver si tenemos el token y verificar que el contenido es correcto, y después pasa a la función que hace lo que le pedimos a la API.
+
+***
+
+## Modelos
+
+En Django nos vamos a referir a los objetos como *Modelos*. Cada modelo hace referencia a una tabla o relación dentro de la base de datos.
+
+Django usa un **ORM**, [*Object–Relational Mapping*](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping), que es una técnica de programación que abstrae a la base de datos de los modelos que usamos. Significa que vamos a poder hacer cosas como insertar en la base de datos sin necesidad de usar SQL, Django provee una gran variedad de métodos para interactuar con los modelos. Siempre nos vamos a referir a modelos, nunca a tablas ni nada similar.
+
+La ventaja de usar el ORM es que podemos acceder a los objetos relacionados usando el operador `.`. Por ejemplo, si una transacción está asociada a un usuario, partiendo de una instancia del modelo `Transaction`, podemos obtener al usuario haciendo esto, `my_transaction.user`, y eso nos devuelve el modelo del usuario.
+
+Estos modelos los declaramos dentro del archivo `api/models.py`.
+
+***
+
+## Usuarios
+
+Django provee por default un modelo de usuario, que es el mismo que estuvimos usando para crear el superuser. Este modelo se puede extender, reemplazar o dejar intacto.
+
+Para nuestro caso, como queremos que nuestros usuarios sean las `accounts` de la API, basta con extenderlo un poco. Simplemente queremos agregarle un campo que sea el *balance* de la cuenta.
+
+Si quieren ver alternativas, la [documentación](https://docs.djangoproject.com/en/3.1/topics/auth/customizing/) de autenticación y usuarios explica como hacerlo.
+
+### Extendiendo al Usuario
+
+Para extender al usuario vamos a empezar agregando nuestro modelo `Account` en `api/models.py`, que es lo que vamos a usar para extender al usuario:
+```python
+# Importamos a la clase "models" de Django
+from django.db import models
+# Importamos el modelo User default de Django
+from django.contrib.auth.models import User
+
+# Los modelos deben extender de models.Model
+class Account(models.Model):
+    # Definimos una relación 1a1 con el modelo de User para extenderlo
+    # "on_delete=models.CASCADE" indica que si se borra el User, se borra el Account, y vice versa
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # Campo "balance", es un campo de tipo "float", que no puede estar vacío ni nulo, y por default se pone en 0
+    balance = models.FloatField(blank=False, null=False, default=0.0)
+```
+
+Como agregamos un modelo hay que hacer las migraciones de nuevo:
+```bash
+python manage.py makemigrations && python manage.py migrate
+```
+
+Si corremos la API (`python manage.py runserver`), debería funcionar todo como antes, no deberíamos ver cambios.
