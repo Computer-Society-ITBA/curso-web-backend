@@ -129,6 +129,18 @@ Estos modelos los declaramos dentro del archivo `api/models.py`.
 
 ***
 
+## Serializers vs Forms
+
+En Django existe lo que se llaman **Serializers** y **Forms**. En sí, ambos funcionan de manera muy similar, pero hay algunas diferencias.
+
+Los [*Serializers*](https://www.django-rest-framework.org/api-guide/serializers/) están hechos más que nada para transformar a los modelos o datos en algo que sea fácilmente renderizable como un JSON o XML. Se les puede agregar validaciones también, y se pueden asociar a un modelo para acceder a campos especiales. Los declaramos en `api/serializers.py`.
+
+Los [*Forms*](https://docs.djangoproject.com/en/3.1/topics/forms/) están hechos con el objetivo de escribir el form en Python y que luego se renderize como un HTML, pero no vamos a usar eso porque estamos armando una API REST. Se les puede agregar validaciones y asociar a modelos. Los declaramos en `api/forms.py`.
+
+Nosotros vamos a usarlos de la siguiente manera, *Serializers* para devolver datos, y *Forms* para recibir datos. De esta forma, las validaciones solo son necesarias en los *Forms*, y los *Serializers* nos ocupamos de que sean la forma en la que nuestros modelos se representan al exterior.
+
+***
+
 ## Usuarios
 
 Django provee por default un modelo de usuario, que es el mismo que estuvimos usando para crear el superuser. Este modelo se puede extender, reemplazar o dejar intacto.
