@@ -25,4 +25,7 @@ footer-col: "#EAEAEA"
 footer-text-col: "#777777"
 footer-link-col: "#404040"
 
+title: Curso Web Backend
+description: [A short description of your site's purpose]
+
 theme: jekyll-theme-cayman
