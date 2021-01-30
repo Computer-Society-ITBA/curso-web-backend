@@ -25,3 +25,13 @@ $cs-black: #000000;
 .main-content hr {
   margin: 4rem 0;
 }
+
+.project-name-link {
+  text-decoration: none;
+  color: #fff;
+  text-align: center;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
