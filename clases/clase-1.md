@@ -11,12 +11,29 @@ principal: false
 
 Durante este curso van a aprender qué es una API REST, como construir una API REST y como probarla. A lo largo de las clases vamos a ir armando una API Bancaria, como dice la página inicial del curso. Durante las clases vamos a estar usando la palabra `terminal`, en este caso va a ser sinónimo de `consola`, y es la consola o terminal de la computadora que estén usando.
 
-Los temas de esta clase son:
-  * [Qué es una API](#que-es-una-api)
-  * [Cómo se usa una API](#como-se-usa-una-api)
-  * [Qué significa ser REST](#que-significa-ser-rest)
-  * [Qué es Django](#que-es-django)
-  * [Cómo se arma un endpoint](#como-se-arma-un-endpoint)
+Los contenidos de esta clase son:
+- [Que es una API](#que-es-una-api)
+- [Como se usa una API](#como-se-usa-una-api)
+  * [Como se compone una request HTTP](#como-se-compone-una-request-http)
+  * [Como hacemos una request HTTP](#como-hacemos-una-request-http)
+- [Que significa ser REST](#que-significa-ser-rest)
+  * [Recursos y URLs](#recursos-y-urls)
+- [Que es Django](#que-es-django)
+  * [Como empezar con Django](#como-empezar-con-django)
+  * [Consola de Admin](#consola-de-admin)
+  * [Como crear la API](#como-crear-la-api)
+  * [Cuales son los contenidos de lo que creamos](#cuales-son-los-contenidos-de-lo-que-creamos)
+- [Como se arma un endpoint](#como-se-arma-un-endpoint)
+  * [Instalar DjangoRestFramework](#instalar-djangorestframework)
+  * [Crear una View](#crear-una-view)
+  * [Registar la URL](#registar-la-url)
+  * [Probarlo](#probarlo)
+- [Ejemplos de Endpoints](#ejemplos-de-endpoints)
+- [Ejercicios](#ejercicios)
+  * [Ejercicio 1 - Endpoint que Suma](#ejercicio-1---endpoint-que-suma)
+  * [Ejercicio 2 - Endpoint que Suma 2](#ejercicio-2---endpoint-que-suma-2)
+  * [Ejercicio 3 - Endpoint Bueno y Malo](#ejercicio-3---endpoint-bueno-y-malo)
+- [Que vamos a estar construyendo](#que-vamos-a-estar-construyendo)
 
 ***
 
@@ -515,3 +532,16 @@ curl -i --header "Content-Type: application/json" -XPOST --data '{"n":10}' http:
 # Respuesta
 HTTP/1.1 200 OK
 ```
+
+## Que vamos a estar construyendo
+
+Como mencionamos al principio, vamos a armar una API REST Bancaria, que va a tener los siguientes URLs (la base de la api es `/api`):
+- `/accounts` con POST              --> Registrar a un usuario
+- `/accounts` con GET               --> Obtener a los usuarios de la API
+- `/accounts/<id>` con GET          --> Obtener información del usuario especificado
+- `/accounts/<id>/funds` con PUT    --> Agregarle fondos al usuario especificado
+- `/transactions` con POST          --> Armar una transacción que recibe `to` y `amount` en el body
+- `/transactions/<id>` con GET      --> Obtener historial de transacciones
+- `/auth/login` con POST            --> Loguearse en la API
+
+Esta es la especificación de la API que vamos a empezar a armar la clase que viene, obviamente cada endpoint tiene más detalles que se verán al momento de que los encaremos.
