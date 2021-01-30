@@ -3,12 +3,21 @@
 
 @import "{{ site.theme }}";
 
-$cs-yellow: #FFA300;
-$cs-blue: #00B5E2;
-$cs-gray: #75787B;
+$cs-yellow: #ffa300;
+$cs-blue: #00b5e2;
+$cs-gray: #75787b;
 $cs-black: #000000;
 
 .page-header {
-    background-color: $cs-yellow;
-    background-image: linear-gradient(120deg, $cs-blue, $cs-yellow);
+  background-color: $cs-yellow;
+  background-image: linear-gradient(120deg, $cs-blue 20%, $cs-yellow 100%);
+}
+
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4,
+.main-content h5,
+.main-content h6 {
+  color: $cs-yellow;
 }
