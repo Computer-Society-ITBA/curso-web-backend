@@ -1,4 +1,4 @@
-## Bienvenidos al Curso de Web Backend
+## Curso Web Backend
 
 La idea de este curso es aprender a construir una API REST en Django desde cero.
 
