@@ -73,7 +73,7 @@ En este caso, la forma de completar la autorización que vamos a usar es mediant
 
 Este *Token* lo vamos a enviar en un header de la request de la siguiente manera: 
 ```bash
-Authorization: Bearer <TOKEN>
+Authorization: JWT <TOKEN>
 ```
 
 ***
@@ -202,10 +202,10 @@ Si corremos la API (`python manage.py runserver`), debería funcionar todo como 
 ### Endpoint para crear un usuario
 
 Para poder armar un endpoint para crear un usuario necesitamos 4 cosas:
-1. Un form
-2. Un serializer para devolver lo que creamos
-3. Una función dentro de `views.py`
-4. Agregar la función con una URL
+1. Un form dentro de `api/forms.py`
+2. Un serializer para devolver lo que creamos dentro de `api/serializers.py`
+3. Una función dentro de `api/views.py`
+4. Agregar la función con una URL dentro de `cs_api/urls.py`
 
 #### Form para crear el usuario
 
@@ -280,7 +280,7 @@ from api import forms, models, serializers
 
 # Definimos a la función con un POST
 @api_view(['POST'])
-def create_user(request):
+def create_account(request):
     # Para usar las forms le pasamos el objeto "request.POST" porque esperamos que sea
     # un form que fue lanzado con un POST
     form = forms.CreateUserForm(request.POST)
@@ -290,6 +290,7 @@ def create_user(request):
         user = form.save()
         # Creamos la Account que va con el usuario, y le pasamos el usuario que acabamos de crear
         models.Account.objects.create(user=user)
+        # Respondemos con los datos del serializer, le pasamos nuestro user y le decimos que es uno solo, y depués nos quedamos con la "data" del serializer
         return Response(serializers.UserSerializer(user, many=False).data, status=status.HTTP_201_CREATED)
     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 ```
@@ -302,21 +303,206 @@ Para agregar la URL es muy simple, simplemente agregamos una entrada a la lista 
 ```python
 urlpatterns = [
     ...,
-    path('api/users', views.create_user, name="create_user")
+    path('api/accounts', views.create_account, name="create_account")
 ]
 ```
 
 ### Probando la creación del usuario
 
-Para probar crear usuarios vamos a usar **Curl**, para poder hacer un POST que vaya con el formato de los datos que queremos lo podemos hacer de esta manera:
+Volvemos a correr la API (`python manage.py runserver`), y para probar crear usuarios vamos a usar **Curl**, para poder hacer un POST que vaya con el formato de los datos que queremos lo podemos hacer de esta manera:
 ```bash
-curl -X POST -F 'username=gonzaloo' -F 'email=hirschgonzalo+gonzaloo@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123!' http://localhost:8000/api/users
-curl -X POST -F 'username=testuser' -F 'email=hirschgonzalo+testuser@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123!' http://localhost:8000/api/users
+curl -X POST -F 'username=gonzaloo' -F 'email=hirschgonzalo+gonzaloo@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123!' http://localhost:8000/api/accounts
+curl -X POST -F 'username=testuser' -F 'email=hirschgonzalo+testuser@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123!' http://localhost:8000/api/accounts
 ```
 
 Cada parámetro de nuestro form va con `-F NOMBRE=VALOR` y agregamos `-X POST` adelante de la request. Podemos ver que la API responde con lo que definimos en el serializer.
 
 Y si probamos con un usuario repetido o generamos algún otro error, responde con un error:
 ```bash
-curl -X POST -F 'username=testuser2' -F 'email=hirschgonzalo+testuser2@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123456!' http://localhost:8000/api/users
+curl -X POST -F 'username=testuser2' -F 'email=hirschgonzalo+testuser2@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123456!' http://localhost:8000/api/accounts
 ```
+
+### Endpoint para obtener usuarios
+
+Ahora que podemos crear usuarios, vamos a hacer un pequeño endpoint para obtenerlos. Dado que ya tenemos un serializer, no hace falta que armemos otro, podemos usar ese.
+
+Hay que cambiar un poco nuestro código para crear un usuario porque queremos que se pueda usar la url `/api/accounts` con un GET y un POST, pero cuando registramos la URL no podemos definir el método ahí. Entonces tenemos que cambiar un poco para que pueda tomar el caso GET y el caso POST.
+
+En `api/views.py` cambiamos el código de esta forma y agregamos una función para listar usuarios:
+```python
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+# Importamos nuestros forms y modelos
+from api import forms, models, serializers
+
+# Esta función es la que registramos en los urls
+@api_view(['POST', 'GET'])
+def accounts_view(request):
+    # Hacemos el caso de un GET y el caso de un POST
+    if request.method == 'GET':
+        return get_accounts(request)
+    else:
+        return create_account(request)
+
+def create_account(request):
+    # Para usar las forms le pasamos el objeto "request.POST" porque esperamos que sea
+    # un form que fue lanzado con un POST
+    form = forms.CreateUserForm(request.POST)
+    # Vemos si es válido, que acá verifica que el mail no exista ya
+    if form.is_valid():
+        # Guardamos el usuario que el form quiere crear, el .save() devuelve al usuario creado
+        user = form.save()
+        # Creamos la Account que va con el usuario, y le pasamos el usuario que acabamos de crear
+        models.Account.objects.create(user=user)
+        # Respondemos con los datos del serializer, le pasamos nuestro user y le decimos que es uno solo, y depués nos quedamos con la "data" del serializer
+        return Response(serializers.UserSerializer(user, many=False).data, status=status.HTTP_201_CREATED)
+    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def get_accounts(request):
+    # Obtenemos todos los usuarios y los serializamos
+    users = serializers.UserSerializer(models.User.objects.all(), many=True).data
+    # Agregamos los datos a la respuesta
+    return Response(users, status=status.HTTP_200_OK)
+```
+
+Y en `cs_api/urls.py` cambiamos lo que estaba registrado en `api/accounts` para que sea así:
+```python
+path('api/accounts', views.accounts_view, name="accounts_view")
+```
+
+Volvemos a correr la API (`python manage.py runserver`) y podemos probar el endpoint de esta manera:
+```bash
+curl http://localhost:8000/api/accounts
+```
+
+***
+
+## Autenticacion
+
+Como mencionamos antes, vamos a usar **JWT Tokens** para autenticar y autorizar a los usuarios.
+
+Vamos a instalar un paquete de Django que simplifica todo esto:
+```bash
+pip install djangorestframework-jwt
+```
+
+Una vez instalado vamos a `cs_api/settings.py` y agregamos lo siguiente:
+```python
+# REST CONFIG
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+```
+Esto aclara en la configuración que usamos JWT para autenticar a nuestros usuarios.
+
+Ahora hay que agregar 2 urls especiales en `cs_api/urls.py`:
+```python
+# Importamos una view especial
+from rest_framework_jwt.views import obtain_jwt_token
+...
+urlpatterns = [
+    ...,
+    path('api/auth/login', obtain_jwt_token),
+]
+```
+
+Para probar este endpoint podemos usar un curl de esta manera:
+```bash
+curl -X POST -d 'username=testuser&password=Admin123!' http://localhost:8000/api/auth/login
+```
+**NOTA**: Tiene parámetros diferentes al curl para crear un usuario, esto es porque los datos del curl de login van a ir por body, mientras que los otros van en formato `x-www-form-urlencoded`.
+
+Es importante notar que se puede configurar con mucha granularidad como funciona la autenticación, y hasta extenderla, pero nosotros nos quedamos con lo que viene de una por simpleza. Pero se puede encontrar más información en la [documentación](https://jpadilla.github.io/django-rest-framework-jwt/).
+
+**NOTA 2**: Nos salteamos la opción de implementar que se puedan refrescar los tokens, no nos vamos a concentrar en eso porque no es tan importante para nuestro uso. Es muy facil de implementar igual, es extremadamente similar al endpoint de login.
+
+### Log Out
+
+Podrán ver que no implementamos un *Log Out*, ¿por que es eso?
+
+Como la API es REST, no guardamos información de los tokens en el servidor, entonces no hay que borrar nada cuando uno quiere dejar de usar la API. Tampoco es necesario invalidar los JWT porque expiran en poco tiempo (en este caso 300 segundos, osea, 5 minutos), y tampoco tendríamos los medios para invalidarlo.
+
+Simplemente si uno quiere hacer un *Log Out* y dejar de usar la API, solo basta con borrar el token de su computadora y listo.
+
+***
+
+## Autorizacion
+
+Ahora ya tenemos **Autenticación**, pero nos hace falta definir **Autorización**, sin eso no sirven nuestros tokens.
+
+Hay varias formas de definir los diferentes permisos y niveles de autorización en los endpoints. Si no definimos nada, por default están protegidos, entonces ahora no podemos crear usuarios porque por default está protegido el endpoint para crear usuarios. Necesitaríamos estár logueados para crear un usuario, y no es muy práctico.
+
+Hay varias formas de definir permisos, pero nos vamos a concentrar en 2:
+1. Usando decorators como `@permission_classes` y diferentes permisos --> Mucho más simple, pero hay casos en que no funciona
+2. Ver permisos a mano --> Más repetitiva, pero sirve para algunos casos
+
+### Usando decorators
+
+Se puede importar un decorator, `@permission_classes` y ciertas clases de permisos que se especifican con operaciones como `|` y `&`, pero solo se pueden usar en funciones que tengan también el decorator `@api_view`. 
+
+En casos como el que tenemos, cuando hay 2 métodos (GET y POST en este caso) en la misma función que tiene el `@api_view`, hay que combinar los decorators con ver a mano.
+
+Para usar los decorators vamos a `api/views.py` y agregamos lo siguiente:
+```python
+# Importamos el decorator
+from rest_framework.decorators import api_view, permission_classes
+# Importamos los permisos
+from rest_framework.permissions import AllowAny, IsAuthenticated
+...
+# Cambiamos accounts_view para agregarle el decorator
+@api_view(['POST', 'GET'])
+@permission_classes([AllowAny])
+def accounts_view(request):
+```
+
+Acá lo que estamos haciendo es decir que para usar la url `api/accounts`, independientemente del método, no hace falta estar autenticado, por eso `AllowAny`. Si quisieramos que cualquiera autenticado pudiera usarlo, usaríamos `IsAuthenticated`.
+
+En nuestro caso queremos que para crear un usuario no haga falta estar logueado, pero cuando querés listar a los usuarios si es necesario, por eso le damos el permiso más abarcativo, que lo usen todos. Necesitamos un poco a mano ahora.
+
+También se puede definir los propios permisos, pero eso más adelante.
+
+### A mano
+
+Para poder ver a mano los permisos, usamos la `request` que todas las funciones que declaramos reciben. Este objeto `request` tiene a un `User` relacionado, por lo que podemos ver que user está logueado en la `request` (si no hay ningún usuario logueado, el usuario es un `AnonymousUser`, que significa que no está logueado).
+
+Dentro de nuestra función de obtener usuarios podemos ver si el usuario está logueado o no, y devolver una respuesta acorde. En `api/views.py` agregamos:
+```python
+def get_accounts(request):
+    # Chequear que no sea anónimo <-- AGREGAMOS ESTO
+    # Si no está autenticado, devolvemos un 401
+    if not request.user.is_authenticated():
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    # Obtenemos todos los usuarios y los serializamos
+    users = serializers.UserSerializer(models.User.objects.all(), many=True).data
+    # Agregamos los datos a la respuesta
+    return Response(users, status=status.HTTP_200_OK)
+```
+
+## Probando la autorizacion
+
+Una vez que mezclamos las 2 formas de manejar la autorización, podemos hacer pruebas.
+
+Probamos lo siguiente:
+1. Crear un usuario --> Hacer como en secciones anteriores
+2. Loguearse --> Hacer como en secciones anteriores
+3. Obtener usuarios
+  - Si ponemos un token de esta forma nos da OK:
+  ```bash
+  curl -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjozLCJ1c2VybmFtZSI6InRlc3R1c2VyIiwiZXhwIjoxNjEyMDQ5NDIyLCJlbWFpbCI6ImhpcnNjaGdvbnphbG8rdGVzdHVzZXJAZ21haWwuY29tIn0.FrQ1bN3x-onD_pPW4w20GriYFKA3r9ERsD6N6UTyiOg" http://localhost:8000/api/accounts
+  ```
+  - Si no ponemos un token, nos da un 401 y no devuelve nada:
+  ```bash
+  curl http://localhost:8000/api/accounts
+  ```
+
+Ya tenemos autorización! :)
+
+
