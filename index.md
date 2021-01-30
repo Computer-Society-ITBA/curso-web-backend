@@ -1,4 +1,10 @@
-## Curso Web Backend
+---
+layout: default
+title:  "Curso Web Backend"
+description: "Curso de desarrollo de APIs REST con Django de Computer Society ITBA"
+---
+
+## Bienvenidos al Curso de Web Backend
 
 La idea de este curso es aprender a construir una API REST en Django desde cero.
 

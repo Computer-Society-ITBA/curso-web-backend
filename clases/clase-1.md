@@ -1,3 +1,9 @@
+---
+layout: default
+title:  "Clase 1"
+description: "Clase 1 - Teoría de APIs REST e inicialización del Proyecto"
+---
+
 # Clase 1
 
 ¡Bienvenidos a la clase número 1!
