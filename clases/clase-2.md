@@ -137,6 +137,22 @@ Para nuestro caso, como queremos que nuestros usuarios sean las `accounts` de la
 
 Si quieren ver alternativas, la [documentación](https://docs.djangoproject.com/en/3.1/topics/auth/customizing/) de autenticación y usuarios explica como hacerlo.
 
+### Modelo default de Usuario
+
+Como mencionamos, Django tiene un modelo default de [usuario](https://docs.djangoproject.com/en/3.1/ref/contrib/auth/), el mismo tiene estos campos:
+- **username** --> requerido
+- **first_name** --> opcional
+- **last_name** --> opcional
+- **email** --> opcional
+- **password** --> requerido
+- **groups** --> roles del usuario
+- **user_permissions** --> permisos del usuario
+- **is_staff** --> determina si el usuario puede usar la consola de admin
+- **is_active** --> determina si está activo el usuario, si no lo está, no puede loguearse
+- **is_superuser** --> determina si es un superuser
+- **last_login** --> última vez que el usuario se logueó
+- **date_joined** --> fecha de creación
+
 ### Extendiendo al Usuario
 
 Para extender al usuario vamos a empezar agregando nuestro modelo `Account` en `api/models.py`, que es lo que vamos a usar para extender al usuario:
