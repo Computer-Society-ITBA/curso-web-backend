@@ -26,6 +26,6 @@ footer-text-col: "#777777"
 footer-link-col: "#404040"
 
 title: Curso Web Backend
-description: [A short description of your site's purpose]
+description: Curso de desarrollo de APIs REST con Django de Computer Society ITBA
 
 theme: jekyll-theme-cayman
