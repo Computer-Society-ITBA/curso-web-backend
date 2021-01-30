@@ -34,7 +34,7 @@ Una *API* se usa porque provee una mayor seguridad al servidor que está detrás
 
 Hay varias formas de comunicarse con una API, pero nos vamos a concentrar en el estándar **HTTP** y como hacer una *HTTP Request*.
 
-**HTTP** es el *[Hypertext Transfer Protocol]((https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol))*, es un protocolo de aplicación basado en el esquema *request-response*. El cliente manda una *request* al servidor, y el servidor response con una *response*.
+**HTTP** es el *[Hypertext Transfer Protocol]((https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol))*, es un protocolo de aplicación basado en el esquema *request-response*. El cliente manda una *request* al servidor, y el servidor responde con una *response*.
 
 HTTP define un [conjunto de métodos](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods) o **verbos HTTP** para indicar que acción se quiere ejecutar sobre el recurso deseado. Si bien hay muchos métodos, nos vamos a concentrar en los que vamos a usar durante el curso:
  - **GET** --> Pide una representación del recurso especificado, es el más común de los métodos, los browsers lo usan cuando se busca algo en Google por ejemplo. *Solo debería buscar información*.
@@ -57,40 +57,6 @@ Toda [request HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#h
  - Un "body" opcionalmente
 
 Los *GET* y *DELETE* no llevan body.
-
-Siendo más concretos, una request es:
-```
-METODO URI/URL VERSION_HTTP
-Host: localhost:8080
-Connection: keep-alive
-
-BODY
-```
-
-Un ejemplo puntual es:
-
-![HTTP Request](resources/clase-1/http_request.png "Ejemplo de Request")
-
-### Como se compone una response HTTP
-
-Toda [response HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_responses) se compone de 4 partes también:
- - Una "status line"
- - Cero o más [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers) (uno en cada línea)
- - Una línea en blanco
- - Un "body" opcionalmente
-
-Siendo más concretos, una response es:
-```
-VERSION_HTTP CODIGO_DE_STATUS MENSAJE_DE_STATUS
-Host: localhost:8080
-Connection: keep-alive
-
-BODY
-```
-
-Un ejemplo puntual es:
-
-![HTTP Response](resources/clase-1/http_response.jpeg "Ejemplo de Response")
 
 ### Como hacemos una request HTTP
 
@@ -327,6 +293,8 @@ Es importante notar que todo lo que es Models, Views y Tests no necesariamente t
 ***
 
 ## Como se arma un endpoint
+
+**¿Qué es un "Endpoint"?**, un "Endpoint" es una URL de la API que decidimos exponer, y que contiene una acción que se puede hacer (el verbo HTTP) sobre un recurso (el especificado por la url)
 
 Para poder armar un endpoint, hace falta tener una función dentro de "views" y registrar la función con su url dentro de "urls".
 
