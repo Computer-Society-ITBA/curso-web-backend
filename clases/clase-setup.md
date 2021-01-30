@@ -1,3 +1,10 @@
+---
+layout: default
+title:  "Setup"
+description: "Herramientas y configuraciones necesarias para las clases"
+principal: false
+---
+
 # Clase Setup
 
 ¡Bienvenidos al Curso de Web Backend!
