@@ -183,9 +183,140 @@ class Account(models.Model):
     balance = models.FloatField(blank=False, null=False, default=0.0)
 ```
 
+También vamos a registrar el modelo en el archivo `api/admin.py` para que podamos ver el modelo desde la consola de admin:
+```python
+from django.contrib import admin
+# Importamos nuestros modelos
+from api import models
+# Registramos nuestro modelo
+admin.site.register(models.Account)
+```
+
 Como agregamos un modelo hay que hacer las migraciones de nuevo:
 ```bash
 python manage.py makemigrations && python manage.py migrate
 ```
 
 Si corremos la API (`python manage.py runserver`), debería funcionar todo como antes, no deberíamos ver cambios.
+
+### Endpoint para crear un usuario
+
+Para poder armar un endpoint para crear un usuario necesitamos 4 cosas:
+1. Un form
+2. Un serializer para devolver lo que creamos
+3. Una función dentro de `views.py`
+4. Agregar la función con una URL
+
+#### Form para crear el usuario
+
+El form lo vamos a agregar en `api/forms.py` (si no existe el archivo, lo creamos), y va a tener los siguiente:
+```python
+# Importamos la clase de form para creación de usuario
+from django.contrib.auth.forms import UserCreationForm
+# Importamos el user de Django
+from django.contrib.auth.models import User
+# Importamos el error de validación
+from django.forms import ValidationError
+# Importamos nuestros modelos
+from . import models
+
+# Form para crear un usuario, tiene que extender a UserCreationForm esta form especial
+class CreateUserForm(UserCreationForm):
+    # En el meta ponemos que modelo usa
+    # Y los campos que vamos a recibir, 
+    # deberían tener el mismo nombre que los campos del modelo
+    # Password1 y Password2 son equivalentes a password y repeatPassword
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+
+    # Este método se llama cuando se trata de validar el mail
+    def clean_email(self):
+        try:
+            # Buscamos usuarios que tengan ese mail
+            user = models.User.objects.get(
+                email=self.cleaned_data.get('email'))
+            # Si hay algún usuario, decimos que el mail ya está usado
+            if user != None:
+                raise ValidationError("Email ya en uso.")
+            # Si está todo bien o no encuentra a un usuario, 
+            # devolvemos el email indicando que está ok
+            return self.cleaned_data.get('email')
+        except models.User.DoesNotExist:
+            return self.cleaned_data.get('email')
+```
+
+Como hereda de `UserCreationForm`, las validaciones de los campos las hace solas, y utiliza las validaciones default. 
+
+Por cada campo que se define en en `Meta`, existe una función que se puede definir que se llama `clean_CAMPO`, y se ejecuta después de validar al campo en sí. En este momento podemos definir nuestras propias validaciones también, como en este caso, que agregamos una validación para que no se puedan repetir los mails de los usuarios. Si encontramos algo que no nos gusta, hacemos un `raise ValidationError("Email ya en uso.")` para lanzar la excepción.
+
+#### Serializer para el usuario
+
+Vamos a definir un simple serializer para poder devolver al usuario que acabamos de crear. Lo definimos en `api/serializers.py` (si no existe el archivo lo creamos):
+```python
+from rest_framework import serializers
+from django.contrib.auth.models import User
+
+# Definimos un serializer que hereda de "ModelSerializer"
+class UserSerializer(serializers.ModelSerializer):
+    # En Meta ponemos que el modelo es el usuario
+    # Ponemos que solo queremos esos 3 campos
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username')
+```
+
+Este serializer sirve para devolver el usuario que acabamos de crear, simplemente estamos especificando que queremos que devuelva esos 3 campos.
+
+#### Función en para crear el usuario
+
+Dentro de `api/views.py` vamos a crear nuestra función que se ocupa de recibir la request:
+```python
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+# Importamos nuestros forms y modelos
+from api import forms, models, serializers
+
+# Definimos a la función con un POST
+@api_view(['POST'])
+def create_user(request):
+    # Para usar las forms le pasamos el objeto "request.POST" porque esperamos que sea
+    # un form que fue lanzado con un POST
+    form = forms.CreateUserForm(request.POST)
+    # Vemos si es válido, que acá verifica que el mail no exista ya
+    if form.is_valid():
+        # Guardamos el usuario que el form quiere crear, el .save() devuelve al usuario creado
+        user = form.save()
+        # Creamos la Account que va con el usuario, y le pasamos el usuario que acabamos de crear
+        models.Account.objects.create(user=user)
+        return Response(serializers.UserSerializer(user, many=False).data, status=status.HTTP_201_CREATED)
+    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+Es importante notar que como usamos un form, los datos tienen que venir en formato `x-www-form-urlencoded`, que significa que la request viene con un formato especial. Además llamamos al método `is_valid()` del form para que valide nuestros datos, si no lo llamamos nunca los valida. En caso de un error respondemos con los errores y un 400, y sinó respondemos con los datos creados.
+
+#### URL para crear un usuario
+
+Para agregar la URL es muy simple, simplemente agregamos una entrada a la lista en `cs_api/urls.py`:
+```python
+urlpatterns = [
+    ...,
+    path('api/users', views.create_user, name="create_user")
+]
+```
+
+### Probando la creación del usuario
+
+Para probar crear usuarios vamos a usar **Curl**, para poder hacer un POST que vaya con el formato de los datos que queremos lo podemos hacer de esta manera:
+```bash
+curl -X POST -F 'username=gonzaloo' -F 'email=hirschgonzalo+gonzaloo@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123!' http://localhost:8000/api/users
+curl -X POST -F 'username=testuser' -F 'email=hirschgonzalo+testuser@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123!' http://localhost:8000/api/users
+```
+
+Cada parámetro de nuestro form va con `-F NOMBRE=VALOR` y agregamos `-X POST` adelante de la request. Podemos ver que la API responde con lo que definimos en el serializer.
+
+Y si probamos con un usuario repetido o generamos algún otro error, responde con un error:
+```bash
+curl -X POST -F 'username=testuser2' -F 'email=hirschgonzalo+testuser2@gmail.com' -F 'password1=Admin123!' -F 'password2=Admin123456!' http://localhost:8000/api/users
+```
