@@ -9,7 +9,7 @@ principal: false
 
 ¡Bienvenidos a la clase número 1!
 
-Durante este curso van a aprender qué es una API REST, como construir una API REST y como probarla. A lo largo de las clases vamos a ir armando una API QUE HACE X. Durante las clases vamos a estar usando la palabra `terminal`, en este caso va a ser sinónimo de `consola`, y es la consola o terminal de la computadora que estén usando.
+Durante este curso van a aprender qué es una API REST, como construir una API REST y como probarla. A lo largo de las clases vamos a ir armando una API Bancaria, como dice la página inicial del curso. Durante las clases vamos a estar usando la palabra `terminal`, en este caso va a ser sinónimo de `consola`, y es la consola o terminal de la computadora que estén usando.
 
 Los temas de esta clase son:
   * [Qué es una API](#que-es-una-api)
