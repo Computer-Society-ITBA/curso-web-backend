@@ -29,3 +29,10 @@ title: Curso Web Backend
 description: Curso de desarrollo de APIs REST con Django de Computer Society ITBA
 
 theme: jekyll-theme-cayman
+
+social-network-links:
+  email: "computersociety@itba.edu.ar"
+  github: csitba
+  instagram: computer.society.itba
+  linkedin: computer.society.itba
+  youtube: c/csitba
