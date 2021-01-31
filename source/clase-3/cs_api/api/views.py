@@ -43,8 +43,16 @@ def get_accounts(request):
     # Chequear que no sea anónimo
     if request.user.is_anonymous:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
+    # Extraemos el query param, ponemos None como default
+    query = request.GET.get('q', None)
+    # Definimos el set como todos los usuarios
+    queryset = models.User.objects.all()
+    # Si hay query, agregamos el filtro, sino usa todos
+    if query != None:
+        # Hacemos icontains sobre el username, y ordenamos por id, el "-" indica que es descendiente
+        queryset = queryset.filter(username__icontains=query).order_by('-id')
     # Obtenemos todos los usuarios y los serializamos
-    users = serializers.UserSerializer(models.User.objects.all(), many=True).data
+    users = serializers.UserSerializer(queryset, many=True).data
     # Agregamos los datos a la respuesta
     return Response(users, status=status.HTTP_200_OK)
 

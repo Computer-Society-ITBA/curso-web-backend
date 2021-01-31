@@ -298,3 +298,66 @@ curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2V
 # Usuario destinatario no existe
 curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyMjA4OCwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.dAekC-_5QNuTA8uDpY7naFNoOZi44ZlcecdjSxNa12w"  -F 'destino=10' -F 'cantidad=10000' http://localhost:8000/api/transactions
 ```
+
+***
+
+## Busqueda
+
+Ahora que ya podemos armar transacciones, estaría bueno poder buscar a usuarios para poder armar las transacciones. Ahora mismo es un poco difícil encontrar al usuario que buscamos, sería más cómodo si pudieramos buscar por el nombre de usuario por ejemplo.
+
+### Como funciona la busqueda
+
+Para poder armar una búsqueda, lo primero que hay que hacer es definir los campos por los que uno va a poder buscar. En nuestro caso (enfocándonos en usuarios) la búsqueda se hace por `username`.
+
+Para poder enviarle a la API la búsqueda que queremos hacer, hay que poder especificar lo que queremos buscar en sí, y para que sea bien correcta nuestra implementación, deberíamos poder buscar con el endpoint `api/accounts`. Para poder hacer esto usamos *Query Params*.
+
+Vamos a definir un *Query Param* que le vamos a enviar a al endpoint para que pueda hacer la búsqueda. Un buen *Query Param* puede ser la letra `q`, representado un `query`.
+
+### Django y Busqueda
+
+Dentro de los muchos métodos que Django provee para nuestros modelos, hay una gran cantidad que son para realizar [queries](https://docs.djangoproject.com/en/3.1/topics/db/queries/) (o búsquedas), los más usados son:
+- `all()` --> Sirve para buscar todos los objetos para un modelo, se llama como `Model.objects.all()`
+- `filter(...)` --> Sirve para quedarse con los objetos que cumplen cierta condición, se llama como `Model.objects.filter(...)`
+- `exclude(...)` --> Es como `filter` pero te quedás con los que NO cumplen cierta condición, se llama como `Model.objects.exclude(...)`
+- `get(...)` --> Sirve para obtener *1 solo* objeto, si hay más de uno da un error, se llama como `Model.objects.get(...)`
+
+Los métodos `filter` y `exclude` son métodos de querying, entonces lo que se puede hacer es especificar condiciones, como por ejemplo que sea mayor o que contenga cierta palabra. Estas condiciones se agregan de la siguiente forma a los métodos:
+```python
+Model.objects.filter(CAMPO__CONDICION=VALOR)
+```
+En donde `CAMPO` es el nombre del campo del modelo (se puede acceder a los relacionados usando `__` en el medio, si el modelo tiene a un *User* relacionado, se puede acceder al ID del usuario como `user__id`), `CONDICION` es la condición (puede ser `lte` (less than or equal) o `icontains` (contains case-insensitive) y hay muchas más), y `VALOR` es el valor que le damos de referencia.
+
+En nuestro caso, que la búsqueda de usuarios se hace por `username`, sería algo así:
+```python
+users = models.User.objects.filter(username__icontains="test")
+```
+
+### Implementando la busqueda
+
+No requiere un cambio muy grande en la API, simplemente tenemos que editar la función `get_accounts` de `api/views.py`:
+```python
+def get_accounts(request):
+    # Chequear que no sea anónimo
+    if request.user.is_anonymous:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    # Extraemos el query param, ponemos None como default
+    query = request.GET.get('q', None)
+    # Definimos el set como todos los usuarios
+    queryset = models.User.objects.all()
+    # Si hay query, agregamos el filtro, sino usa todos
+    if query != None:
+        # Hacemos icontains sobre el username, y ordenamos por id, el "-" indica que es descendiente
+        queryset = queryset.filter(username__icontains=query).order_by('-id')
+    # Obtenemos todos los usuarios y los serializamos
+    users = serializers.UserSerializer(queryset, many=True).data
+    # Agregamos los datos a la respuesta
+    return Response(users, status=status.HTTP_200_OK)
+```
+
+Simplemente extraemos el query param `q`, y si vemos que es diferente de `None` (que es el default), corremos el filtro. Ordenamos por `id` descendente para que tenga un orden de más nuevo a más viejo. También, como son encadenables los filtros, podemos hacer primero el `all` y si hay un query, podemos encadenarle el `filter`.
+
+Para probar este nuevo query lo que se puede hacer es:
+```bash
+curl -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyNjE4MiwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.JwX4HEuERAghvGsvCc-vx3GLHoKHdnEDqV9UTTChJXU" http://localhost:8000/api/accounts?q=test
+```
+Y si probamos con diferentes búsquedas vemos que funciona.
