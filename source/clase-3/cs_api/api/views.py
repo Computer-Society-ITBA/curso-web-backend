@@ -5,15 +5,19 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 # Importamos nuestros forms y modelos
-from api import forms, models, serializers, constants
+from api import forms, models, serializers, constants, pagination
 # Importamos nuestro permiso
 from api.permissions import IsAdmin, IsUser
 # Importamos las transacciones
 from django.db import transaction, IntegrityError
 # Importamos la clase Group
 from django.contrib.auth.models import Group
+# Importamos al Paginator
+from django.core.paginator import Paginator, EmptyPage
 
 # Esta función es la que registramos en los urls
+
+
 @api_view(['POST', 'GET'])
 @permission_classes([AllowAny])
 def accounts_view(request):
@@ -22,6 +26,7 @@ def accounts_view(request):
         return get_accounts(request)
     else:
         return create_account(request)
+
 
 def create_account(request):
     # Para usar las forms le pasamos el objeto "request.POST" porque esperamos que sea
@@ -39,24 +44,48 @@ def create_account(request):
         return Response(serializers.UserSerializer(user, many=False).data, status=status.HTTP_201_CREATED)
     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 def get_accounts(request):
     # Chequear que no sea anónimo
     if request.user.is_anonymous:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     # Extraemos el query param, ponemos None como default
     query = request.GET.get('q', None)
-    # Definimos el set como todos los usuarios
-    queryset = models.User.objects.all()
+    # Estraemos los query de paginación, y si hay un error devolvemos eso
+    page, page_size, err = pagination.extract_paging_from_request(
+        request=request)
+    if err != None:
+        return err
+
     # Si hay query, agregamos el filtro, sino usa todos
     if query != None:
         # Hacemos icontains sobre el username, y ordenamos por id, el "-" indica que es descendiente
-        queryset = queryset.filter(username__icontains=query).order_by('-id')
-    # Obtenemos todos los usuarios y los serializamos
-    users = serializers.UserSerializer(queryset, many=True).data
-    # Agregamos los datos a la respuesta
-    return Response(users, status=status.HTTP_200_OK)
+        queryset = models.User.objects.filter(
+            username__icontains=query).order_by('-id')
+    else:
+        # Definimos el set como todos los usuarios
+        queryset = models.User.objects.all().order_by('-id')
+
+    # Usamos un try catch por si la página está vacía
+    try:
+        # Convertimos a Paginator
+        query_paginator = Paginator(queryset, page_size)
+        # Nos quedamos con la página que queremos
+        query_data = query_paginator.page(page)
+        # Serializamos a los usuarios
+        serializer = serializers.UserSerializer(query_data, many=True)
+        # Agregamos a los usuarios a la respuesta
+        resp = Response(serializer.data)
+        # Agregamos headers de paginación a la respuesta
+        resp = pagination.add_paging_to_response(
+            request, resp, query_data, page, query_paginator.num_pages)
+        return resp
+    except EmptyPage:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 # Especificamos un DELETE
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAdmin])  # Definimos que tiene que ser un admin
 def user_delete(request, id):
@@ -64,7 +93,7 @@ def user_delete(request, id):
     # Vemos si el ID del usuario de la request es igual al que se manda en la URL
     if request.user.id == id:
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    
+
     # Necesitamos un try-catch porque tal vez el usuario no existe
     try:
         # Buscamos al usuario por ID
@@ -77,6 +106,7 @@ def user_delete(request, id):
     except models.User.DoesNotExist:
         # Si no existe le damos un 404
         return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 @permission_classes([IsUser])
@@ -95,7 +125,8 @@ def create_transaction(request):
                 if cantidad > request.user.account.balance:
                     return Response({"error": "Balance insuficiente"}, status=status.HTTP_400_BAD_REQUEST)
                 # Creamos la transaccion
-                tx = models.Transaction(origen=request.user, destino=destino, cantidad=cantidad)
+                tx = models.Transaction(
+                    origen=request.user, destino=destino, cantidad=cantidad)
                 # Actualizamos los balances
                 request.user.account.balance -= cantidad
                 destino.account.balance += cantidad
@@ -106,5 +137,5 @@ def create_transaction(request):
                 # Nuestra respuesta
                 return Response(serializers.TransactionSerializer(tx, many=False).data, status=status.HTTP_201_CREATED)
         except IntegrityError:
-            return Response({"error": "Error transfiriendo fondos"}, status=status.HTTP_400_BAD_REQUEST)        
+            return Response({"error": "Error transfiriendo fondos"}, status=status.HTTP_400_BAD_REQUEST)
     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
