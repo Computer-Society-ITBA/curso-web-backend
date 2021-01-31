@@ -557,21 +557,33 @@ from api import models, constants
 # Importamos el modelo de Group
 from django.contrib.auth.models import Group
 ...
+# Importamos nuestros modelos
+from api import models, constants
+# Importamos el modelo de Group
+from django.contrib.auth.models import Group
+# Importamos el error que no se pudo hacer la operación
+from django.db.utils import OperationalError
+...
 # Creamos el grupo de ADMIN
-group, created = Group.objects.get_or_create(name=constants.GROUP_ADMIN)
-if created:
-    print("Admin creado exitosamente")
-else:
-    print("Admin ya existía, no fue creado")
-# Creamos el grupo de USER
-group, created = Group.objects.get_or_create(name=constants.GROUP_USER)
-if created:
-    print("User creado exitosamente")
-else:
-    print("User ya existía, no fue creado")
+try:
+	group, created = Group.objects.get_or_create(name=constants.GROUP_ADMIN)
+	if created:
+	    print("Admin creado exitosamente")
+	else:
+	    print("Admin ya existía, no fue creado")
+	# Creamos el grupo de USER
+	group, created = Group.objects.get_or_create(name=constants.GROUP_USER)
+	if created:
+	    print("User creado exitosamente")
+	else:
+	    print("User ya existía, no fue creado")
+except OperationalError:
+	print("No existe la base de datos de los grupos")
 ```
 
 El código lo que hace es usar el método `get_or_create` de los modelos, de forma que si ya existe el grupo no lo crea, y además imprimimos un pequeño mensaje en la consola donde corre Django para indicar si lo creamos o no. Este código se corre cuando se levanta la API, entonces nos aseguramos de que siempre existan los grupos.
+
+**NOTA**: Usamos un *try-catch* con un *OperationalError* para evitar problemas al hacer las migraciones si clonamos el proyecto. Como antes de hacer las migraciones no hay tablas, puede generar una excepción, pero con esto lo evitamos
 
 ### Como asignar grupos
 
