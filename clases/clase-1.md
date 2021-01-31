@@ -539,6 +539,7 @@ Como mencionamos al principio, vamos a armar una API REST Bancaria, que va a ten
 - `/accounts` con POST              --> Registrar a un usuario
 - `/accounts` con GET               --> Obtener a los usuarios de la API
 - `/accounts/<id>` con GET          --> Obtener información del usuario especificado
+- `/accounts/<id>` con DELETE       --> Borrar a un usuario
 - `/accounts/<id>/funds` con PUT    --> Agregarle fondos al usuario especificado
 - `/transactions` con POST          --> Armar una transacción que recibe `to` y `amount` en el body
 - `/transactions/<id>` con GET      --> Obtener historial de transacciones

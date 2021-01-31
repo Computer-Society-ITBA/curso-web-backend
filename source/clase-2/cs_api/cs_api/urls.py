@@ -22,6 +22,7 @@ from rest_framework_jwt.views import obtain_jwt_token
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/accounts', views.accounts_view, name="accounts_view"),
+    path('api/accounts/<int:id>', views.user_delete, name="user_delete"),
     path('api/auth/login', obtain_jwt_token),
 ]
 

@@ -139,6 +139,8 @@ Los [*Forms*](https://docs.djangoproject.com/en/3.1/topics/forms/) están hechos
 
 Nosotros vamos a usarlos de la siguiente manera, *Serializers* para devolver datos, y *Forms* para recibir datos. De esta forma, las validaciones solo son necesarias en los *Forms*, y los *Serializers* nos ocupamos de que sean la forma en la que nuestros modelos se representan al exterior.
 
+**NOTA**: Los *Forms* solo se pueden usar para requests con GET y POST, así que en caso de tener un PUT vamos a usar un *Serializer* para recibir los datos.
+
 ***
 
 ## Usuarios
@@ -486,7 +488,7 @@ def get_accounts(request):
     return Response(users, status=status.HTTP_200_OK)
 ```
 
-## Probando la autorizacion
+### Probando la autorizacion
 
 Una vez que mezclamos las 2 formas de manejar la autorización, podemos hacer pruebas.
 
@@ -504,5 +506,167 @@ Probamos lo siguiente:
   ```
 
 Ya tenemos autorización! :)
+
+***
+
+## Grupos y Permisos
+
+Un **permiso** es una autorización para realizar una acción que podemos darle a los usuarios (no nos vamos a concentrar en esto).
+
+Un **grupo** es una forma de categorizar usuarios y de esa forma darles permisos.
+
+Los **grupos* (o roles) nos sirven para definir acciones que nuestros distintos tipos de usuarios pueden realizar. En nuestro caso vamos a tener 2 grupos, `user` y `admin`. En el caso de nuestra API bancaria no hay mucha diferencia entre las acciones que puede hacer un admin y un usuario. La diferencia es que el `admin` va a poder borrar usuarios y cambiarles el grupo a los usuarios.
+
+### Como crear un grupo
+
+No vamos a necesitar un endpoint para esto porque queremos crearlos una sola vez a los grupos. Tenemos 2 opciones:
+1. Crearlos a mano desde la consola de admin --> Si queremos llevar nuestro código a otro lado sin la base, tenemos que volver a hacerlo, y es poco práctico
+2. Armar un pequeño código que los cree solos
+
+Crear un grupo es tan facil como crear un usuario, pero antes queremos definir los nombres en algún lugar, en el archivo `api/constants.py` (si no existe lo creamos) vamos a definir nuestras constantes de ahora en más:
+```python
+GROUP_USER = "user"
+GROUP_ADMIN = "admin"
+```
+
+Y ahora en el archivo `api/admin.py` vamos a agregar un par de líneas que se ocupan de crear a los grupos:
+```python
+# Importamos nuestros modelos
+from api import models, constants
+# Importamos el modelo de Group
+from django.contrib.auth.models import Group
+...
+# Creamos el grupo de ADMIN
+group, created = Group.objects.get_or_create(name=constants.GROUP_ADMIN)
+if created:
+    print("Admin creado exitosamente")
+else:
+    print("Admin ya existía, no fue creado")
+# Creamos el grupo de USER
+group, created = Group.objects.get_or_create(name=constants.GROUP_USER)
+if created:
+    print("User creado exitosamente")
+else:
+    print("User ya existía, no fue creado")
+```
+
+El código lo que hace es usar el método `get_or_create` de los modelos, de forma que si ya existe el grupo no lo crea, y además imprimimos un pequeño mensaje en la consola donde corre Django para indicar si lo creamos o no. Este código se corre cuando se levanta la API, entonces nos aseguramos de que siempre existan los grupos.
+
+### Como asignar grupos
+
+Ahora tenemos nuestros grupos, pero no se los asignamos a nuestros usuarios, entonces hay que cambiar eso.
+
+Tenemos que cambiar nuestro código para crear usuarios, para que ahora le agregue el grupo cuando lo crea. En el archivo `api/views.py` agregamos un par de líneas que se ocupan de eso, de forma que nuestra función `create_account` queda así:
+```python
+# Agregamos "constants" a lo que importamos
+from api import forms, models, serializers, constants
+
+def create_account(request):
+    # Para usar las forms le pasamos el objeto "request.POST" porque esperamos que sea
+    # un form que fue lanzado con un POST
+    form = forms.CreateUserForm(request.POST)
+    # Vemos si es válido, que acá verifica que el mail no exista ya
+    if form.is_valid():
+        # Guardamos el usuario que el form quiere crear, el .save() devuelve al usuario creado
+        user = form.save()
+        # Agregamos por default el grupo user a todos los usuarios
+        # IMPORTANTE --> AGREGAMOS SOLO ESTA LINEA!
+        user.groups.add(Group.objects.get(name=constants.GROUP_USER))
+        # Creamos la Account que va con el usuario, y le pasamos el usuario que acabamos de crear
+        models.Account.objects.create(user=user)
+        # Respondemos con los datos del serializer, le pasamos nuestro user y le decimos que es uno solo, y depués nos quedamos con la "data" del serializer
+        return Response(serializers.UserSerializer(user, many=False).data, status=status.HTTP_201_CREATED)
+    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+Ahora cada vez que creamos un usuario, se va a crear como un `user`.
+
+Seguimos teniendo un pequeño problema igual, nuestro superuser no tiene el rol de `admin`, y los usuarios que creamos antes tampoco tienen su rol de `user`. Para corregir esto tenemos que entrar a la consola de admin, ir a cada usuario que no tenga grupo y agregarle el grupo correspondiente (o borrar los usuarios, excepto el superuser). Los grupos se agregan acá:
+![Django admin roles](resources/clase-1/django_admin_roles.png "Django admin roles")
+Después de poner al grupo en la parte derecha, hay que guardar los cambios.
+
+### Permisos hechos por nosotros
+
+Ya que tenemos grupos, ahora podemos definir nuestros propios permisos, y vamos a probar crear estos permisos para armar un endpoint para borrar a un usuario, pero que solo un admin pueda hacer esto. Este endpoint va a estar en `api/accounts/<id>` con un DELETE.
+
+Vamos a empezar armando nuestro propio permiso, en el archivo `api/permissions.py` (si no existe lo creamos), vamos a definir nuestro propio permiso `IsAdmin`:
+```python
+from api import constants, models
+from rest_framework.permissions import BasePermission
+
+# La clase IsAdmin es nuestro permiso, que tiene que extender de BasePermission para que sea un permiso
+class IsAdmin(BasePermission):
+    # Mensaje de error que va a devolver
+    message = "El usuario no es admin"
+
+    # La función has_permission devuelve True si tiene permiso o False si no lo tiene
+    # request.user es el usuario que está autenticado y manda el token
+    def has_permission(self, request, view):
+        # Si no tiene grupos le decimos que no de una
+        if not request.user.groups.exists():
+            return False
+        # Asumimos en este caso que cada usuario va a tener 1 solo grupo, aunque puede tener más
+        # Este código funciona solo si tiene 1 grupo, si tiene más habria que definir una política para
+        # ver si el usuario tiene permiso al tener más de 1 grupo
+        # Devuelve True si es admin, False si no lo es
+        return request.user.groups.all()[0].name == constants.GROUP_ADMIN
+```
+
+Una vez que tenemos nuestro permiso creado, vamos a `api/views.py` para crear el endpoint:
+```python
+# Importamos nuestro permiso
+from api.permissions import IsAdmin
+
+# Especificamos un DELETE
+@api_view(['DELETE'])
+@permission_classes([IsAdmin])  # Definimos que tiene que ser un admin
+def user_delete(request, id):
+    # No dejamos que un usuario se borre a si mismo
+    # Vemos si el ID del usuario de la request es igual al que se manda en la URL
+    if request.user.id == id:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    # Necesitamos un try-catch porque tal vez el usuario no existe
+    try:
+        # Buscamos al usuario por ID
+        user = models.User.objects.get(pk=id)
+        # Borramos al usuario
+        user.delete()
+        # Devolvemos que no hay contenido porque lo pudimos borrar
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except models.User.DoesNotExist:
+        # Si no existe le damos un 404
+        return Response(status=status.HTTP_404_NOT_FOUND)
+```
+
+Es importante ver que como esperamos que el endpoint esté en `api/accounts/<id>` el parámetro `id` se lo pasamos a la función.
+
+Ahora queda registrar la URL en `cs_api/urls.py` y listo (noten que especificamos que es un `int`):
+```python
+urlpatterns = [
+    ...,
+    path('api/accounts/<int:id>', views.user_delete, name="user_delete"),
+    ...
+]
+```
+
+Ahora podemos volver a correr la API (`python manage.py runserver`) y teniendo el token de un admin, borrar a un usuario:
+```bash
+# Con token de admin
+curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIxMDgwNDIsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.uNRkEJ1jnzKU6l5dXA2bc4Z5sXJ4DhuQ1fDQNhI-xIU" http://localhost:8000/api/accounts/1
+```
+
+Y si no le damos un token, le damos el token de un `user` o le damos un id que no existe, tira error:
+```bash
+# Sin token
+curl -X DELETE http://localhost:8000/api/accounts/1
+# Con token de user
+curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjozLCJ1c2VybmFtZSI6InRlc3R1c2VyIiwiZXhwIjoxNjEyMTA4MTg2LCJlbWFpbCI6ImhpcnNjaGdvbnphbG8rdGVzdHVzZXJAZ21haWwuY29tIn0.HEAunNAdY2c95uwR3iLDQcAWFAmrj1zDz1TTdVNeh-U" http://localhost:8000/api/accounts/1
+# Con id que no existe
+curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIxMDgwNDIsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.uNRkEJ1jnzKU6l5dXA2bc4Z5sXJ4DhuQ1fDQNhI-xIU" http://localhost:8000/api/accounts/1000
+# Con id del mismo usuario, borrarse a si mismo, en mi caso mi id es 2
+curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIxMDgwNDIsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.uNRkEJ1jnzKU6l5dXA2bc4Z5sXJ4DhuQ1fDQNhI-xIU" http://localhost:8000/api/accounts/2
+```
+
 
 
