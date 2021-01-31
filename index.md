@@ -23,6 +23,10 @@ Estas son las clases que ya están disponibles
 - [Clase 3](clases/clase-3.md)
 - [Clase 4](clases/clase-4.md)
 
+### Requests
+
+También compilamos todas las requests que vamos a estar haciendo en un solo archivo para que sea más rápido encontrarlas, están [acá](clases/clase-requests.md).
+
 ### Consultas
 
 Cualquier consulta que tengan pueden usar nuestro [Subreddit Oficial](https://www.reddit.com/r/CursoWebBackendITBA/) y postear ahí sus dudas.
