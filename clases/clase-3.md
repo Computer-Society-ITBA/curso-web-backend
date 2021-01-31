@@ -56,3 +56,245 @@ python manage.py runserver
 
 ***
 ***
+
+## Modelos
+
+Reviendo la parte de modelos de la clase pasada, en Django nos referimos a los objetos como *Modelos*. Cada modelo hace referencia a una tabla o relación dentro de la base de datos.
+
+Django usa un **ORM**, [*Object–Relational Mapping*](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping), que es una técnica de programación que abstrae a la base de datos de los modelos que usamos. Significa que no necesitamos saber SQL para hacer cosas como insertar un objeto o borrarlo, y además nos abstrae de la base de datos que usamos, porque nos permite cambiar la base de datos (por ejemplo cambiar SQLite por PostgreSQL) sin necesidad de adaptar nada, se hace solo. Django también provee una gran variedad de métodos para interactuar con los modelos. Siempre nos vamos a referir a modelos, nunca a tablas ni nada similar.
+
+Una ventaja de usar el ORM es que podemos acceder a los objetos relacionados usando el operador `.`. Por ejemplo, si una transacción está asociada a un usuario, partiendo de una instancia del modelo `Transaction`, podemos obtener al usuario haciendo esto, `my_transaction.user`, y eso nos devuelve el modelo del usuario.
+
+Estos modelos los declaramos dentro del archivo `api/models.py`.
+
+### Metodos de los Modelos
+
+Django ofrece un montón de [métodos](https://docs.djangoproject.com/en/3.1/ref/models/instances) para interactuar con nuestros modelos, los más usados son:
+- `save()` --> Sirve para guardar los cambios que se hicieron sobre la instancia de un modelo o guardar un nuevo objeto, se llama como `instance.save()`
+- `delete()` --> Sirve para borrar la instancia del modelo, se llama como `isntance.delete()`
+- `create()` --> Sirve para crear y guardar un nuevo objeto, se llama como `Model.objects.create(...)`, donde `Model` es el modelo que queremos crear
+
+Hay muchos más métodos, pero los vamos a ver más adelante cuando hablemos de búsqueda.
+
+### Campos de los Modelos
+
+Los campos en los modelos se llaman [**fields**](https://docs.djangoproject.com/en/3.1/ref/models/fields/#model-field-types), y Django viene con una gran cantidad de estos que se pueden usar en los modelos. Los más comunes son:
+- `BooleanField` --> Sirve para un campo booleano, True o False
+- `CharField` --> Sirve para guardar texto
+- `DateField` --> Sirve para guardar fechas
+- `DateTimeField` --> Sirve para guardar fecha y hora
+- `DecimalField` --> Sirve para guardar números decimales de precisión arbitraria
+- `EmailField` --> Sirve exactamente para un email
+- `FloatField` --> Sirve para números decimales con precisión `float`
+- `IntegerField` --> Sirve para números enteros
+- `AutoField` --> Sirve para especificar números autoincrementales como IDs, pero Django por default agrega IDs, así que no hace falta usarlo
+
+También permite especificar campos de relaciones, como relaciones con otros objetos, se usan (entre muchos otros):
+- `ForeignKey` --> Sirve para especificar el modelo relacionado
+- `OneToOneField` --> Sirve para especificar relaciones 1 a 1
+
+***
+
+## Creando nuevos modelos
+
+Vamos a agregarle un nuevo modelo a nuestra API, el modelo `Transaction`. Queremos que las personas puedan empezar a usar nuestra API para transferir dinero, por lo que tenemos que agregar nuestro nuevo modelo.
+
+En `api/models.py` agregamos nuestro modelo de `Transaction`:
+```python
+class Transaction(models.Model):
+    # Usuario que origina la transacción, especificamos el nombre porque sinó tira un error
+    origen = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='origen')
+    # Usuario que recibe la transacción
+    destino = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='destino')
+    # Cantidad de dinero transferida
+    cantidad = models.FloatField(blank=False, null=False, default=0.0)
+    # Fecha en que se hace la transacción
+    fecha_realizada = models.DateTimeField(blank=False, null=False, auto_now_add=True)
+```
+
+Nuestro modelo de `Transaction` tiene un `origen` y `destino`, que son usuarios de la API. Usamos `on_delete=models.SET_NULL` porque no queremos perder el registro de transacciones si se borra un usuario, si bien va a quedar `NULL`, queda el registro para el otro usuario. La `fecha_realizada` usa `auto_now_add=True` para que se ponga solo con la fecha en que creamos el nuevo objeto.
+
+Dado que no queremos que se pierda toda la información de la transacción cuando se borra un usuario, tenemos que hacer algo. Nos conviene pasar de *borrado físico* a un *borrado lógico* de los usuarios. El *borrado físico* significa que físicamente borramos al usuario de la base de datos, mientras que el *borrado lógico* significa que usamos algún campo del usuario para marcarlo como inactivo o borrado. Por suerte los usuarios de Django tienen un campo que se llama `is_active`. Cambiamos el código para crear un usuario para que ahora en vez de `user.delete()` haga esto:
+```python
+# Especificamos un DELETE
+@api_view(['DELETE'])
+@permission_classes([IsAdmin])  # Definimos que tiene que ser un admin
+def user_delete(request, id):
+    # No dejamos que un usuario se borre a si mismo
+    # Vemos si el ID del usuario de la request es igual al que se manda en la URL
+    if request.user.id == id:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    # Necesitamos un try-catch porque tal vez el usuario no existe
+    try:
+        # Buscamos al usuario por ID
+        user = models.User.objects.get(pk=id)
+        # Hacemos que no esté activo en vez de borrado físico
+        user.is_active = False
+        user.save()
+        # Devolvemos que no hay contenido porque lo pudimos borrar
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except models.User.DoesNotExist:
+        # Si no existe le damos un 404
+        return Response(status=status.HTTP_404_NOT_FOUND)
+```
+
+Vamos a aprovechar para también registrar este modelo para verlo en la consola de admin, en `api/admin.py` agregamos:
+```python
+admin.site.register(models.Transaction)
+```
+
+Después de hacer esto, como agregamos un modelo, tenemos que hacer las migraciones:
+```bash
+python manage.py makemigrations && python manage.py migrate
+```
+
+***
+
+## Creando transacciones
+
+Vamos a armar nuestro nuevo endpoint para poder crear transacciones. Este endpoint va a estar en la url `api/transactions` con un POST, y recibe en el body un campo `destino` y un campo `cantidad`.
+
+### Form
+
+Necesitamos un *Form* porque vamos a estar usando un POST. Adentro de `api/forms.py` vamos a agregar nuestro nuevo form:
+```python
+# Importamos los forms
+from django import forms
+
+# Nuestra form extiende de "Form" y no tiene un modelo asociado
+class CreateTransactionForm(forms.Form):
+    # Campo con el ID de la cuenta destino, no puede ser menor que 1
+    destino = forms.IntegerField(min_value=1)
+    # Campo para la cantidad, no puede ser menor que 0
+    cantidad = forms.FloatField(min_value=0)
+
+    def clean_destino(self):
+        try:
+            # Buscamos usuarios que tengan ese id
+            user = models.User.objects.get(id=self.cleaned_data.get('destino'))
+            # Si no existe el usuario, tiramos un error
+            # Si el usuario no está activo, le decimos que no existe al otro
+            # No tiene por que saber que ese usuario está borrado
+            # Si el usuario no es user, no dejamos que se haga
+            if user == None:
+                raise ValidationError("No existe el destinatario.")
+            elif not user.is_active:
+                raise ValidationError("No existe el destinatario.")
+            elif user.groups.all()[0].name != constants.GROUP_USER:
+                raise ValidationError("El destinatario no es un usuario.")
+            # Si está todo bien devuelvo el destino
+            return self.cleaned_data.get('destino')
+        except models.User.DoesNotExist:
+            raise ValidationError("No existe el destinatario.")
+```
+
+En este form no usamos un modelo porque no es necesario, para crear el modelo `Transaction` necesitamos que el usuario `origen` esté, pero desde el form no podemos acceder a eso.
+
+### Permiso
+
+Queremos hacer que solo los usuarios del grupo `user` puedan armar transacciones, y para eso necesitamos definir un nuevo permiso. 
+
+En `api/permissions.py` vamos a agregar nuestro nuevo permiso `IsUser`:
+```python
+# La clase IsUser es nuestro permiso, que tiene que extender de BasePermission para que sea un permiso
+class IsUser(BasePermission):
+    # Mensaje de error que va a devolver
+    message = "El usuario no es user"
+
+    def has_permission(self, request, view):
+        # Si no tiene grupos le decimos que no de una
+        if not request.user.groups.exists():
+            return False
+        return request.user.groups.all()[0].name == constants.GROUP_USER
+```
+
+### Serializer
+
+Queremos devolver la transacción creada, al igual que como hicimos con el usuario, así que tenemos que agregar un serializer en `api/serializers.py`:
+```python
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Transaction
+        fields = ('id', 'origen', 'destino', 'cantidad', 'fecha_realizada')
+```
+Incluye el `id`, la `fecha_realizada` y la información de participantes y cantidad.
+
+### View Funcional
+
+Con nuestro permiso, modelo, form y serializer estamos listos para crear la función que arma la transacción. La creamos en `api/views.py`:
+```python
+# Importamos nuestro permiso
+from api.permissions import IsAdmin, IsUser
+# Importamos las transacciones
+from django.db import transaction, IntegrityError
+
+@api_view(['POST'])
+@permission_classes([IsUser])
+def create_transaction(request):
+    # Creamos el form
+    form = forms.CreateTransactionForm(request.POST)
+    # Vemos si es válido
+    if form.is_valid():
+        # Obteniendo el usuario destino y la cantidad
+        destino = models.User.objects.get(id=form.cleaned_data['destino'])
+        cantidad = form.cleaned_data['cantidad']
+        # Usamos un bloque transaccional para evitar problemas
+        try:
+            with transaction.atomic():
+                # Vemos que tenga plata suficiente
+                if cantidad > request.user.account.balance:
+                    return Response({"error": "Balance insuficiente"}, status=status.HTTP_400_BAD_REQUEST)
+                # Creamos la transaccion
+                tx = models.Transaction(origen=request.user, destino=destino, cantidad=cantidad)
+                # Actualizamos los balances
+                request.user.account.balance -= cantidad
+                destino.account += cantidad
+                # Guardamos los cambios
+                tx.save()
+                request.user.account.save()
+                destino.account.save()
+                # Nuestra respuesta
+                return Response(serializers.TransactionSerializer(tx, many=False).data, status=status.HTTP_201_CREATED)
+        except IntegrityError:
+            return Response({"error": "Error transfiriendo fondos"}, status=status.HTTP_400_BAD_REQUEST)        
+    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+Hay varias cosas para mencionar de este código:
+- Usamos un decorator (`@permission_classes([IsUser])`) para definir el permiso.
+- Usamos una transacción (de base de datos, no nuestro modelo) para poder hacer la operacion. Esto lo hacemos porque la transacción nos asegura que pasa todo o no pasa nada. No queremos que la transacción no ocurra pero a un usuario le saquemos plata, entonces la transacción de la base de datos nos permite hacer esto. Lo que se hace dentro de la transacción está dentro del bloque `with transaction.atomic():` y si hay un error es del tipo `IntegrityError`.
+
+### Registrar URL
+
+Con la función creada, podemos ir a `cs_api/urls.py` a registrar el endpoint:
+```python
+urlpatterns = [
+    ...
+    path('api/transactions', views.create_transaction, name="create_transaction"),
+    ...,
+]
+```
+
+### Probamos las transacciones
+
+Para poder probar las transacciones necesitamos, 2 usuarios de tipo `user` y agregarles balance a esos usuarios. 
+
+Para agregarles balance se puede editar por ahora desde la consola de admin yendo a la parte de `Account`.
+
+Para probar crear transacciones se puede usar el siguiente curl (mis usuarios de prueba tenían id 5 y 6):
+```bash
+curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyMTcwMSwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.UkRuDXtdtv2Rag5oqoUk3nMiAXGwszP76BLE7Gzh7vo"  -F 'destino=6' -F 'cantidad=100' http://localhost:8000/api/transactions
+```
+
+Podemos también probar que pasa cuando mandamos cosas que no corresponden:
+```bash
+# Cantidad muy grande
+curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyMjA4OCwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.dAekC-_5QNuTA8uDpY7naFNoOZi44ZlcecdjSxNa12w"  -F 'destino=6' -F 'cantidad=10000' http://localhost:8000/api/transactions
+# Sin cantidad
+curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyMjA4OCwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.dAekC-_5QNuTA8uDpY7naFNoOZi44ZlcecdjSxNa12w"  -F 'destino=6' http://localhost:8000/api/transactions
+# Usuario destinatario es admin
+curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyMjA4OCwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.dAekC-_5QNuTA8uDpY7naFNoOZi44ZlcecdjSxNa12w"  -F 'destino=1' -F 'cantidad=10000' http://localhost:8000/api/transactions
+# Usuario destinatario no existe
+curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyMjA4OCwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.dAekC-_5QNuTA8uDpY7naFNoOZi44ZlcecdjSxNa12w"  -F 'destino=10' -F 'cantidad=10000' http://localhost:8000/api/transactions
+```

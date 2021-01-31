@@ -26,7 +26,7 @@ Los temas de esta clase son:
         + [Serializer para el usuario](#serializer-para-el-usuario)
         + [Función en para crear el usuario](#funci-n-en-para-crear-el-usuario)
         + [URL para crear un usuario](#url-para-crear-un-usuario)
-    * [Probando la creación del usuario](#probando-la-creaci-n-del-usuario)
+    * [Probando la creacion del usuario](#probando-la-creacion-del-usuario)
     * [Endpoint para obtener usuarios](#endpoint-para-obtener-usuarios)
 - [Autenticacion](#autenticacion)
     * [Log Out](#log-out)
@@ -330,7 +330,7 @@ urlpatterns = [
 ]
 ```
 
-### Probando la creación del usuario
+### Probando la creacion del usuario
 
 Volvemos a correr la API (`python manage.py runserver`), y para probar crear usuarios vamos a usar **Curl**, para poder hacer un POST que vaya con el formato de los datos que queremos lo podemos hacer de esta manera:
 ```bash
@@ -593,6 +593,8 @@ Tenemos que cambiar nuestro código para crear usuarios, para que ahora le agreg
 ```python
 # Agregamos "constants" a lo que importamos
 from api import forms, models, serializers, constants
+# Importamos la clase Group
+from django.contrib.auth.models import Group
 
 def create_account(request):
     # Para usar las forms le pasamos el objeto "request.POST" porque esperamos que sea

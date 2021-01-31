@@ -543,8 +543,8 @@ Como mencionamos al principio, vamos a armar una API REST Bancaria, que va a ten
 - `/accounts/<id>` con GET          --> Obtener información del usuario especificado
 - `/accounts/<id>` con DELETE       --> Borrar a un usuario
 - `/accounts/<id>/funds` con PUT    --> Agregarle fondos al usuario especificado
-- `/transactions` con POST          --> Armar una transacción que recibe `to` y `amount` en el body
-- `/transactions/<id>` con GET      --> Obtener historial de transacciones
+- `/transactions` con POST          --> Armar una transacción que recibe `destino` y `cantidad` en el body
+- `/transactions` con GET           --> Obtener historial de transacciones
 - `/auth/login` con POST            --> Loguearse en la API
 
 Esta es la especificación de la API que vamos a empezar a armar la clase que viene, obviamente cada endpoint tiene más detalles que se verán al momento de que los encaremos.
