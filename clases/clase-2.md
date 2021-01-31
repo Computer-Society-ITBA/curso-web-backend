@@ -469,7 +469,7 @@ Hay varias formas de definir permisos, pero nos vamos a concentrar en 2:
 
 ### Usando decorators
 
-Se puede importar un decorator, `@permission_classes` y ciertas clases de permisos que se especifican con operaciones como `|` y `&`, pero solo se pueden usar en funciones que tengan también el decorator `@api_view`. 
+Se puede importar un decorator, `@permission_classes` y ciertas clases de permisos que se especifican con operaciones como `|` y `&`, pero solo se pueden usar en funciones que tengan también el decorator `@api_view`. Esto ocurre porque estamos usando el enfoque funcional de las *Views*, si usaramos el enfoque por clases podríamos obviar la parte de hacerlo a mano también.
 
 En casos como el que tenemos, cuando hay 2 métodos (GET y POST en este caso) en la misma función que tiene el `@api_view`, hay que combinar los decorators con ver a mano.
 

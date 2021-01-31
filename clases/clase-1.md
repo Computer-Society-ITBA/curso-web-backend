@@ -342,6 +342,8 @@ INSTALLED_APPS = [
 
 ### Crear una View
 
+Hay 2 formas de crear una *View*, hay un enfoque funcional (creamos funciones para los endpoints) y otro con clases (creamos clases para los endpoints). Cada uno tiene sus pros y contras, pero vamos a estar usando el enfoque funcional porque es más fácil de entender y escribir.
+
 Dentro de `api/views.py` vamos a crear una función `test_get`:
 ```python
 # Imports necesarios
