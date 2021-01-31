@@ -12,11 +12,32 @@ principal: false
 En esta clase vamos a ver como crear usuarios, como autenticarlos y como crear roles para los mismos.
 
 Los temas de esta clase son:
-  * [Qué es una API](#que-es-una-api)
-  * [Cómo se usa una API](#como-se-usa-una-api)
-  * [Qué significa ser REST](#que-significa-ser-rest)
-  * [Qué es Django](#que-es-django)
-  * [Cómo se arma un endpoint](#como-se-arma-un-endpoint)
+- [Que es la Autenticacion](#que-es-la-autenticacion)
+- [JWT Tokens](#jwt-tokens)
+    * [Como se arma un JWT Token](#como-se-arma-un-jwt-token)
+    * [Como funciona en nuestro caso](#como-funciona-en-nuestro-caso)
+- [Modelos](#modelos)
+- [Serializers vs Forms](#serializers-vs-forms)
+- [Usuarios](#usuarios)
+    * [Modelo default de Usuario](#modelo-default-de-usuario)
+    * [Extendiendo al Usuario](#extendiendo-al-usuario)
+    * [Endpoint para crear un usuario](#endpoint-para-crear-un-usuario)
+        + [Form para crear el usuario](#form-para-crear-el-usuario)
+        + [Serializer para el usuario](#serializer-para-el-usuario)
+        + [Función en para crear el usuario](#funci-n-en-para-crear-el-usuario)
+        + [URL para crear un usuario](#url-para-crear-un-usuario)
+    * [Probando la creación del usuario](#probando-la-creaci-n-del-usuario)
+    * [Endpoint para obtener usuarios](#endpoint-para-obtener-usuarios)
+- [Autenticacion](#autenticacion)
+    * [Log Out](#log-out)
+- [Autorizacion](#autorizacion)
+    * [Usando decorators](#usando-decorators)
+    * [A mano](#a-mano)
+    * [Probando la autorizacion](#probando-la-autorizacion)
+- [Grupos y Permisos](#grupos-y-permisos)
+    * [Como crear un grupo](#como-crear-un-grupo)
+    * [Como asignar grupos](#como-asignar-grupos)
+    * [Permisos hechos por nosotros](#permisos-hechos-por-nosotros)
 
 ***
 ***
@@ -515,7 +536,7 @@ Un **permiso** es una autorización para realizar una acción que podemos darle 
 
 Un **grupo** es una forma de categorizar usuarios y de esa forma darles permisos.
 
-Los **grupos* (o roles) nos sirven para definir acciones que nuestros distintos tipos de usuarios pueden realizar. En nuestro caso vamos a tener 2 grupos, `user` y `admin`. En el caso de nuestra API bancaria no hay mucha diferencia entre las acciones que puede hacer un admin y un usuario. La diferencia es que el `admin` va a poder borrar usuarios y cambiarles el grupo a los usuarios.
+Los *grupos* (o roles) nos sirven para definir acciones que nuestros distintos tipos de usuarios pueden realizar. En nuestro caso vamos a tener 2 grupos, `user` y `admin`. En el caso de nuestra API bancaria no hay mucha diferencia entre las acciones que puede hacer un admin y un usuario. La diferencia es que el `admin` va a poder borrar usuarios y cambiarles el grupo a los usuarios.
 
 ### Como crear un grupo
 
@@ -667,6 +688,3 @@ curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c
 # Con id del mismo usuario, borrarse a si mismo, en mi caso mi id es 2
 curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIxMDgwNDIsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.uNRkEJ1jnzKU6l5dXA2bc4Z5sXJ4DhuQ1fDQNhI-xIU" http://localhost:8000/api/accounts/2
 ```
-
-
-
