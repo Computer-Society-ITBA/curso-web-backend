@@ -25,4 +25,4 @@ Estas son las clases que ya están disponibles
 
 ### Consultas
 
-Cualquier consulta que tengan pueden enviar un mail a ghirsch@itba.edu.ar con dudas, o usar el Subreddit, TO DO SUBREDDIT.
+Cualquier consulta que tengan pueden usar nuestro [Subreddit Oficial](https://www.reddit.com/r/CursoWebBackendITBA/) y postear ahí sus dudas.
