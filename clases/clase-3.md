@@ -358,6 +358,161 @@ Simplemente extraemos el query param `q`, y si vemos que es diferente de `None` 
 
 Para probar este nuevo query lo que se puede hacer es:
 ```bash
-curl -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyNjE4MiwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.JwX4HEuERAghvGsvCc-vx3GLHoKHdnEDqV9UTTChJXU" http://localhost:8000/api/accounts?q=test
+curl -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyOTU3MiwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.Lteb8xlmcCjCCbYUtcuMR2u06H9TgjnauWQRAVJ94N4" http://localhost:8000/api/accounts?q=test
 ```
 Y si probamos con diferentes búsquedas vemos que funciona.
+
+***
+
+## Paginacion
+
+Como está ahora nuestra API, si no filtramos los usuarios obtenemos todos los que tenemos. Esto es poco práctico, si tenemos 1 millón de usuarios nos vamos a traer la base de datos entera y no estaría bueno.
+
+Paginación es separar nuestros resultados en **páginas**, es decir, cuando alguien pide resultados va a ver solo parte de los resultados, y si quiere ver más, tendrá que pedir páginas diferentes.
+
+### Como funciona la paginacion
+
+La paginación, al igual que la búsqueda, se puede hacer simplemente agregando 2 *Query Param* a nuestro endpoint de búsqueda. Vamos a agregar el parámetro `p` (indica la página que queremos) y el parámetro `s` (indica cuantos elementos por página mostramos).
+
+Esto hace que nuestra API sea mucho más eficiente y cómoda de usar para los usuarios.
+
+Y también nuestra API ahora va a devolver algo más además de los resultados, va a tener unos *Header* especiales que contienen links a otras páginas para facilitar la navegación. Va a contener 4 *Header*s:
+- **first** --> Link a la primera página
+- **prev** --> Link a la página anterior
+- **next** --> Link a la página siguiente
+- **last** --> Link a la última página
+
+### Django y paginacion
+
+Django provee algo llamado `Paginator`, que se puede usar para paginar nuestros resultados, de forma que sea muy simple implementarlo.
+
+Este `Paginator` recibe la lista de objetos que tiene que paginar y los tamaños de páginas, para devolvernos un objeto al que le podemos pedir nuestras diferentes páginas.
+
+### Implementando paginacion
+
+Para implementar nuestra paginación vamos a necesitar ayuda de 3 funciones extra que vamos a crear en un archivo que se llame `api/pagination.py`. Vamos a armar una función que agregue los headers de paginación, otra que cambie el parámetro viejo de paginación por el nuevo que queremos para los headers, y una última que extraiga los headers de paginación (para poder reusarla después):
+```python
+# Importamos para parsear la url
+import urllib.parse as urlparse
+# Importamos nuestras constantes
+from api import constants
+from rest_framework.response import Response
+from rest_framework import status
+
+# Agrega headers de paginación a la response
+def add_paging_to_response(request, response, query_data, page, total_pages):
+    # Extraemos la URL
+    complete_url = request.build_absolute_uri()
+    # Usamos un pequeño "algoritmo" para determinar que headers mostrar
+    # Si tiene próxima, la agrego
+    if query_data.has_next():
+        response[constants.HEADER_NEXT] = replace_page_param(
+            complete_url, query_data.next_page_number())
+    # Si tiene anterior, la agrego
+    if query_data.has_previous():
+        response[constants.HEADER_PREV] = replace_page_param(
+            complete_url, query_data.previous_page_number())
+    # Si no estamos en la última página, y tampoco en la anteúltima, lo agrego
+    if page < total_pages and (query_data.has_next() and query_data.next_page_number() != total_pages):
+        response[constants.HEADER_LAST] = replace_page_param(
+            complete_url, total_pages)
+    # Si no estamos en la página 1 y tiene una página anterior que es diferente de 1, la agregamos
+    if page > 1 and (query_data.has_previous() and query_data.previous_page_number() != 1):
+        response[constants.HEADER_FIRST] = replace_page_param(complete_url, 1)
+    return response
+
+# Reemplaza el parámetro de la p en la url dada
+def replace_page_param(url, new_page):
+    # Parseamos la URL
+    parsed = urlparse.urlparse(url)
+    # Extraemos los query params
+    querys = parsed.query.split("&")
+    # Flag para ver si vino o no el param de la página
+    has_page = False
+    # Buscamos el param de la página
+    for i in range(len(querys)):
+        # Separamos para ver si empieza con "p"
+        parts = querys[i].split('=')
+        if parts[0] == 'p':
+            # Cambiamos el parámetro viejo por el nuevo
+            querys[i] = 'p=' + str(new_page)
+            has_page = True
+
+    # Si no vino con página lo agregamos
+    if not has_page:
+        querys.append("p=" + str(new_page))
+
+    # Reconstruimos los query params
+    new_query = "&".join(["{}".format(query) for query in querys])
+    # Reconstruimos la URL
+    parsed = parsed._replace(query=new_query)
+
+    return urlparse.urlunparse(parsed)
+
+# Extrae y valida los headers de paginación
+def extract_paging_from_request(request, page_default=1, page_size_default=6):
+    try:
+        page = int(request.GET.get('p', page_default))
+        page_size = int(request.GET.get('s', page_size_default))
+    except ValueError:
+        return None, None, Response(status=status.HTTP_400_BAD_REQUEST)
+    return page, page_size, None
+```
+
+La función `add_paging_to_response` se ocupa de agregar los headers necesarios según un pequeño algoritmo, mientras que `replace_page_param` se ocupa de ayudarla a construir la URL bien.
+
+También agregamos unas nuevas constantes a nuestro archivo de constantes (`api/constants.py`):
+```python
+HEADER_LAST = "last"
+HEADER_FIRST = "first"
+HEADER_NEXT = "next"
+HEADER_PREV = "prev"
+```
+
+Del lado de la función en `api/views.py`, hay que hacer unos pequeños cambios para implementar la paginación:
+```python
+def get_accounts(request):
+    # Chequear que no sea anónimo
+    if request.user.is_anonymous:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    # Extraemos el query param, ponemos None como default
+    query = request.GET.get('q', None)
+    # Estraemos los query de paginación, y si hay un error devolvemos eso
+    page, page_size, err = pagination.extract_paging_from_request(
+        request=request)
+    if err != None:
+        return err
+
+    # Si hay query, agregamos el filtro, sino usa todos
+    if query != None:
+        # Hacemos icontains sobre el username, y ordenamos por id, el "-" indica que es descendiente
+        queryset = models.User.objects.filter(
+            username__icontains=query).order_by('-id')
+    else:
+        # Definimos el set como todos los usuarios
+        queryset = models.User.objects.all().order_by('-id')
+
+    # Usamos un try catch por si la página está vacía
+    try:
+        # Convertimos a Paginator
+        query_paginator = Paginator(queryset, page_size)
+        # Nos quedamos con la página que queremos
+        query_data = query_paginator.page(page)
+        # Serializamos a los usuarios
+        serializer = serializers.UserSerializer(query_data, many=True)
+        # Agregamos a los usuarios a la respuesta
+        resp = Response(serializer.data)
+        # Agregamos headers de paginación a la respuesta
+        resp = pagination.add_paging_to_response(
+            request, resp, query_data, page, query_paginator.num_pages)
+        return resp
+    except EmptyPage:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+```
+
+Usamos la función `extract_paging_from_request` para extraer los query param de paginación, luego dependiendo de si hay un query o no, hacemos el filtro o no. Con los datos, generamos el paginator y nos quedamos con la página que queremos. Serializamos los resultados y agregamos lo headers de paginación a la respuesta.
+
+Para probar lo que se puede hacer es:
+```bash
+curl -i -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyOTU3MiwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.Lteb8xlmcCjCCbYUtcuMR2u06H9TgjnauWQRAVJ94N4" 'http://localhost:8000/api/accounts?p=1&s=1'
+```
