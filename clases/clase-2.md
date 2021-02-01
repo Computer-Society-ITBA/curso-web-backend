@@ -12,10 +12,10 @@ principal: false
 En esta clase vamos a ver como crear usuarios, como autenticarlos y como crear roles para los mismos.
 
 Los temas de esta clase son:
-- [Qué es la Autenticación](#que-es-la-autenticacion)
+- [Qué es la Autenticación](#qué-es-la-autenticación)
 - [JWT Tokens](#jwt-tokens)
-    * [Cómo se arma un JWT Token](#como-se-arma-un-jwt-token)
-    * [Cómo funciona en nuestro caso](#como-funciona-en-nuestro-caso)
+    * [Cómo se arma un JWT Token](#cómo-se-arma-un-jwt-token)
+    * [Cómo funciona en nuestro caso](#cómo-funciona-en-nuestro-caso)
 - [Modelos](#modelos)
 - [Serializers vs Forms](#serializers-vs-forms)
 - [Usuarios](#usuarios)
@@ -28,15 +28,15 @@ Los temas de esta clase son:
         + [URL para crear un usuario](#url-para-crear-un-usuario)
     * [Probando la creación del usuario](#probando-la-creacion-del-usuario)
     * [Endpoint para obtener usuarios](#endpoint-para-obtener-usuarios)
-- [Autenticación](#autenticacion)
+- [Autenticación](#autenticación)
     * [Log Out](#log-out)
-- [Autorización](#autorizacion)
+- [Autorización](#autorización)
     * [Usando decorators](#usando-decorators)
     * [A mano](#a-mano)
-    * [Probando la autorización](#probando-la-autorizacion)
+    * [Probando la autorización](#probando-la-autorización)
 - [Grupos y Permisos](#grupos-y-permisos)
-    * [Cómo crear un grupo](#como-crear-un-grupo)
-    * [Cómo asignar grupos](#como-asignar-grupos)
+    * [Cómo crear un grupo](#cómo-crear-un-grupo)
+    * [Cómo asignar grupos](#cómo-asignar-grupos)
     * [Permisos hechos por nosotros](#permisos-hechos-por-nosotros)
 
 ***

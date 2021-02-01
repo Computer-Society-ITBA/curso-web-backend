@@ -12,18 +12,18 @@ principal: false
 Durante este curso van a aprender qué es una API REST, como construir una API REST y como probarla. A lo largo de las clases vamos a ir armando una API Bancaria, como dice la página inicial del curso. Durante las clases vamos a estar usando la palabra `terminal`, en este caso va a ser sinónimo de `consola`, y es la consola o terminal de la computadora que estén usando.
 
 Los contenidos de esta clase son:
-- [Qué es una API](#que-es-una-api)
-- [Como se usa una API](#como-se-usa-una-api)
-  * [Como se compone una request HTTP](#como-se-compone-una-request-http)
-  * [Como hacemos una request HTTP](#como-hacemos-una-request-http)
-- [Que significa ser REST](#que-significa-ser-rest)
+- [Qué es una API](#qué-es-una-api)
+- [Cómo se usa una API](#cómo-se-usa-una-api)
+  * [Cómo se compone una request HTTP](#cómo-se-compone-una-request-http)
+  * [Cómo hacemos una request HTTP](#cómo-hacemos-una-request-http)
+- [Qué significa ser REST](#qué-significa-ser-rest)
   * [Recursos y URLs](#recursos-y-urls)
-- [Que es Django](#que-es-django)
-  * [Como empezar con Django](#como-empezar-con-django)
+- [Qué es Django](#qué-es-django)
+  * [Cómo empezar con Django](#cómo-empezar-con-django)
   * [Consola de Admin](#consola-de-admin)
-  * [Como crear la API](#como-crear-la-api)
+  * [Cómo crear la API](#cómo-crear-la-api)
   * [Cuales son los contenidos de lo que creamos](#cuales-son-los-contenidos-de-lo-que-creamos)
-- [Como se arma un endpoint](#como-se-arma-un-endpoint)
+- [Cómo se arma un endpoint](#cómo-se-arma-un-endpoint)
   * [Instalar DjangoRestFramework](#instalar-djangorestframework)
   * [Crear una View](#crear-una-view)
   * [Registar la URL](#registar-la-url)
@@ -33,7 +33,7 @@ Los contenidos de esta clase son:
   * [Ejercicio 1 - Endpoint que Suma](#ejercicio-1---endpoint-que-suma)
   * [Ejercicio 2 - Endpoint que Suma 2](#ejercicio-2---endpoint-que-suma-2)
   * [Ejercicio 3 - Endpoint Bueno y Malo](#ejercicio-3---endpoint-bueno-y-malo)
-- [Que vamos a estar construyendo](#que-vamos-a-estar-construyendo)
+- [Qué vamos a estar construyendo](#qué-vamos-a-estar-construyendo)
 
 ***
 
@@ -54,7 +54,7 @@ Una *API* se usa porque provee una mayor seguridad al servidor que está detrás
 
 ***
 
-## Como se usa una API
+## Cómo se usa una API
 
 Hay varias formas de comunicarse con una API, pero nos vamos a concentrar en el estándar **HTTP** y como hacer una *HTTP Request*.
 
@@ -72,7 +72,7 @@ Si tuvieramos que resumir en 1 palabra para que se usa cada método diríamos:
  - **PUT** --> *actualizar*
  - **DELETE** --> *borrar*
 
-### Como se compone una request HTTP
+### Cómo se compone una request HTTP
 
 Toda [request HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_requests) se compone de 4 partes:
  - Una "request line"
@@ -82,7 +82,7 @@ Toda [request HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#h
 
 Los *GET* y *DELETE* no llevan body.
 
-### Como hacemos una request HTTP
+### Cómo hacemos una request HTTP
 
 Es muy simple hacer una request HTTP, hay muchas herramientas que permiten hacerlo, algunas ya vienen instaladas en la computadora, como **Curl** y otras se pueden instalar, como **Postman**, pero a fin de cuentas termina siendo un curl lo que hacen esas otras herramientas.
 
@@ -103,7 +103,7 @@ Transfer-Encoding: chunked
 
 ***
 
-## Que significa ser REST
+## Qué significa ser REST
 
 **REST** significa *[Representational State Transfer](https://en.wikipedia.org/wiki/Representational_state_transfer)*, y es un estándar en la arquitectura de software.
 
@@ -137,7 +137,7 @@ Si hay una clara jerarquía en las urls, se puede usar, siempre y cuando no qued
 
 ***
 
-## Que es Django
+## Qué es Django
 
 [Django](https://www.djangoproject.com/) es un framework de alto nivel de Python que alienta el desarrollo rápido y el diseño limpio de aplicaciones. Además es gratis y open-source.
 
@@ -145,7 +145,7 @@ Tiene un gran variedad de paquetes disponibles para no tener que reinventar cosa
 
 Instagram, Pinterest y Mozilla, entre otros, usan Django.
 
-### Como empezar con Django
+### Cómo empezar con Django
 
 Es muy simple crear un proyecto de Django, vamos a empezar por crear nuestro proyecto de API.
 
@@ -234,7 +234,7 @@ Actualmente solo vamos a poder ver a los usuarios y a los grupos, que son los ro
 
 Si se ponen a investigar, van a ver que el único usuario que aparece es el usuario que creamos, que tiene marcado que es staff y superuser.
 
-### Como crear la API
+### Cómo crear la API
 
 Para poder empezar a hacer cosas más interesantes, necesitamos agrergar una aplicación a nuestro proyecto de Django, la API. 
 
@@ -316,7 +316,7 @@ Es importante notar que todo lo que es Models, Views y Tests no necesariamente t
 
 ***
 
-## Como se arma un endpoint
+## Cómo se arma un endpoint
 
 **¿Qué es un "Endpoint"?**, un "Endpoint" es una URL de la API que decidimos exponer, y que contiene una acción que se puede hacer (el verbo HTTP) sobre un recurso (el especificado por la url)
 
@@ -535,7 +535,7 @@ curl -i --header "Content-Type: application/json" -XPOST --data '{"n":10}' http:
 HTTP/1.1 200 OK
 ```
 
-## Que vamos a estar construyendo
+## Qué vamos a estar construyendo
 
 Como mencionamos al principio, vamos a armar una API REST Bancaria, que va a tener los siguientes URLs (la base de la api es `/api`):
 - `/accounts` con POST              --> Registrar a un usuario

@@ -67,7 +67,7 @@ Una ventaja de usar el ORM es que podemos acceder a los objetos relacionados usa
 
 Estos modelos los declaramos dentro del archivo `api/models.py`.
 
-### Metodos de los Modelos
+### Métodos de los Modelos
 
 Django ofrece un montón de [métodos](https://docs.djangoproject.com/en/3.1/ref/models/instances) para interactuar con nuestros modelos, los más usados son:
 - `save()` --> Sirve para guardar los cambios que se hicieron sobre la instancia de un modelo o guardar un nuevo objeto, se llama como `instance.save()`
@@ -301,11 +301,11 @@ curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2V
 
 ***
 
-## Busqueda
+## Búsqueda
 
 Ahora que ya podemos armar transacciones, estaría bueno poder buscar a usuarios para poder armar las transacciones. Ahora mismo es un poco difícil encontrar al usuario que buscamos, sería más cómodo si pudieramos buscar por el nombre de usuario por ejemplo.
 
-### Como funciona la busqueda
+### Cómo funciona la búsqueda
 
 Para poder armar una búsqueda, lo primero que hay que hacer es definir los campos por los que uno va a poder buscar. En nuestro caso (enfocándonos en usuarios) la búsqueda se hace por `username`.
 
@@ -313,7 +313,7 @@ Para poder enviarle a la API la búsqueda que queremos hacer, hay que poder espe
 
 Vamos a definir un *Query Param* que le vamos a enviar a al endpoint para que pueda hacer la búsqueda. Un buen *Query Param* puede ser la letra `q`, representado un `query`.
 
-### Django y Busqueda
+### Django y Búsqueda
 
 Dentro de los muchos métodos que Django provee para nuestros modelos, hay una gran cantidad que son para realizar [queries](https://docs.djangoproject.com/en/3.1/topics/db/queries/) (o búsquedas), los más usados son:
 - `all()` --> Sirve para buscar todos los objetos para un modelo, se llama como `Model.objects.all()`
@@ -332,7 +332,7 @@ En nuestro caso, que la búsqueda de usuarios se hace por `username`, sería alg
 users = models.User.objects.filter(username__icontains="test")
 ```
 
-### Implementando la busqueda
+### Implementando la búsqueda
 
 No requiere un cambio muy grande en la API, simplemente tenemos que editar la función `get_accounts` de `api/views.py`:
 ```python
@@ -364,13 +364,13 @@ Y si probamos con diferentes búsquedas vemos que funciona.
 
 ***
 
-## Paginacion
+## Paginación
 
 Como está ahora nuestra API, si no filtramos los usuarios obtenemos todos los que tenemos. Esto es poco práctico, si tenemos 1 millón de usuarios nos vamos a traer la base de datos entera y no estaría bueno.
 
 Paginación es separar nuestros resultados en **páginas**, es decir, cuando alguien pide resultados va a ver solo parte de los resultados, y si quiere ver más, tendrá que pedir páginas diferentes.
 
-### Como funciona la paginacion
+### Cómo funciona la paginación
 
 La paginación, al igual que la búsqueda, se puede hacer simplemente agregando 2 *Query Param* a nuestro endpoint de búsqueda. Vamos a agregar el parámetro `p` (indica la página que queremos) y el parámetro `s` (indica cuantos elementos por página mostramos).
 
@@ -384,13 +384,13 @@ Y también nuestra API ahora va a devolver algo más además de los resultados, 
 
 **NOTA**: Es importante darle a los datos paginados algún orden para que siempre que se pida la misma página se obtengan los mismos resultados. En nuestro caso podemos ordenar usuarios por ID (siendo que van a estar ordenados por orden de creación) y las transacciones por fecha de realizacón, ambos ordenes descendentes.
 
-### Django y paginacion
+### Django y paginación
 
 Django provee algo llamado `Paginator`, que se puede usar para paginar nuestros resultados, de forma que sea muy simple implementarlo.
 
 Este `Paginator` recibe la lista de objetos que tiene que paginar y los tamaños de páginas, para devolvernos un objeto al que le podemos pedir nuestras diferentes páginas.
 
-### Implementando paginacion
+### Implementando paginación
 
 Para implementar nuestra paginación vamos a necesitar ayuda de 3 funciones extra que vamos a crear en un archivo que se llame `api/pagination.py`. Vamos a armar una función que agregue los headers de paginación, otra que cambie el parámetro viejo de paginación por el nuevo que queremos para los headers, y una última que extraiga los headers de paginación (para poder reusarla después):
 ```python
@@ -518,3 +518,11 @@ Para probar lo que se puede hacer es esto (con `-i` podemos ver los headers de l
 ```bash
 curl -i -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyOTU3MiwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.Lteb8xlmcCjCCbYUtcuMR2u06H9TgjnauWQRAVJ94N4" 'http://localhost:8000/api/accounts?p=1&s=1'
 ```
+
+***
+
+## Ejercicios
+
+### Ejercicio 1 - Búsqueda de transacciones
+
+### Ejercicio 2 - Paginación de transacciones
