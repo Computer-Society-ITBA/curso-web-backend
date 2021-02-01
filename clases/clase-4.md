@@ -61,7 +61,7 @@ python manage.py runserver
 
 A nuestra API le falta un poco de trabajo todavía, nos faltan 2 endpoints. Necesitamos un endpoint para poder obtener el propio perfil, y un endpoint para poder alterar el balance.
 
-Ahora nos enfocamos en el perfil del usuario.
+Ahora nos enfocamos en el perfil del usuario, vamos a usar un endpoint que sea `api/accounts/<id>` con un GET.
 
 ### Serializers
 
@@ -206,7 +206,90 @@ curl -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo
 
 ## Agregar Fondos
 
+Nos falta un solo endpoint ahora, uno para poder agregar fondos a nuestra cuenta. Para hacer esto vamos a usar un endpoint `api/accounts/<id>` con PUT.
 
+Vamos a definir 2 comportamientos para el endpoint, los usuarios solo pueden agregar a su balance, mientras que el admin puede agregar balance y cambiar el rol del usuario.
 
+### Serializer
 
+Ya tenemos un serializer (el que creamos antes), pero necesitamos agregarle una validación para que el balance no pueda ser menor que el actual, en `api/serializers.py` agregamos el siguiente método en `UserDetailsSerializer`:
+```python
+# Agregamos el "validate" para ver que no estén tratando de sacar balance
+def validate(self, data):
+    # Usamos un context, que es algo que se le puede pasar al serializer al momento de instanciarlo
+    if data['balance'] < self.context['user'].account.balance:
+        raise serializers.ValidationError(
+            "Invalid balance, cannot be less than current")
+    return data
+```
 
+Ya tenemos la validación en el `GroupSerializer`, así que no hace falta agregarla.
+
+### View Funcional
+
+Ahora hay que agregar el caso PUT en `api/views.py`, teniendo en cuenta que dependiendo del grupo del usuario, va a poder hacer cosas diferentes:
+```python
+# Agregamos el caso en la función registrada
+@api_view(['DELETE', 'GET', 'PUT'])
+@permission_classes([IsOwner | IsAdmin])
+def user_specific_view(request, id):
+    # Hacemos el caso de un GET y el caso de un DELETE
+    if request.method == 'GET':
+        return get_user(request, id)
+    elif request.method == 'PUT':
+        return user_update(request, id)
+    else:
+        return user_delete(request, id)
+
+def user_update(request, id):
+    # Necesitamos un try-catch porque tal vez el usuario no existe
+    try:
+        # Buscamos al usuario por ID
+        user = models.User.objects.get(pk=id)
+        # Creamos el serializer, con el context como el user
+        serializer = serializers.UserDetailsSerializer(data=request.data, context={'user': user})
+        # Vemos que sea válido, sinó damos error
+        if serializer.is_valid():
+            # En caso que sea el usuario, permitimos el cambio de balance
+            if request.user.groups.all()[0].name == constants.GROUP_USER:
+                # Cambiamos balance, accedemos así porque como usamos un "source" en el campo
+                # Al recibirlo lo toma en la jerarquía del "source" que habíamos definido
+                user.account.balance = serializer.validated_data.get('account')['balance']
+                # Guardamos
+                user.account.save()
+            else:
+                # Vemos que no se saque el rol a sí mismo
+                if id == request.user.id and serializer.groups[0].name != constants.GROUP_ADMIN:
+                    return Response({"Error": "No se puede cambiar el propio rol"}, status=status.HTTP_400_BAD_REQUEST)
+                # Recuperamos el nuevo rol, accedemos así porque el objeto es un OrderedDic
+                group = Group.objects.get(name=serializer.validated_data.get('groups')[0].get('name'))
+                # Cambiamos balance, accedemos así porque como usamos un "source" en el campo
+                # Al recibirlo lo toma en la jerarquía del "source" que habíamos definido
+                user.account.balance = serializer.validated_data.get('account')['balance']
+                # Sacamos roles actuales
+                user.groups.clear()
+                # Agregamos el nuevo rol
+                user.groups.add(group)
+                # Guardamos
+                user.account.save()
+                user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except models.User.DoesNotExist:
+        # Si no existe le damos un 404
+        return Response(status=status.HTTP_404_NOT_FOUND)
+```
+
+Dependiendo del rol dejamos que haga algo diferente, pero esperamos recibir lo mismo que devolvemos en el GET.
+
+### Probando el Endpoint
+
+Para probar el endpoint simplemente hay que tener a un usuario logueado (está bueno probar con y sin admin) y ejecutar el siguiente curl (en mi caso el ID del usuario era 5):
+```bash
+curl -i -X PUT -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjIyMzcwNCwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.aP2YwbjYy9TlK0i8g0MV-2oevsSOTped_cOclXFPhMw" -H "Content-Type: application/json" http://localhost:8000/api/accounts/5 -d '{"balance": 1000.0,"email": "hirschgonzalo+testuser1@gmail.com","groups": [{"name": "user"}],"id": 5,"username": "testuser1"}'
+```
+
+Se puede probar también cambiarle el rol a otro usuario (estando con un admin):
+```bash
+curl -i -X PUT -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIyMjM4NTUsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.nod24byOncyvPmefG5ZGktjugaK9qAoMMFfNPCgl4Ic" -H "Content-Type: application/json" http://localhost:8000/api/accounts/6 -d '{"id":6,"email":"hirschgonzalo+testuser2@gmail.com","username":"testuser2","groups":[{"name":"admin"}],"balance":100.0}'
+```

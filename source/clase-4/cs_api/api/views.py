@@ -167,12 +167,14 @@ def create_transaction(request):
             return Response({"error": "Error transfiriendo fondos"}, status=status.HTTP_400_BAD_REQUEST)
     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['DELETE', 'GET'])
+@api_view(['DELETE', 'GET', 'PUT'])
 @permission_classes([IsOwner | IsAdmin])
 def user_specific_view(request, id):
     # Hacemos el caso de un GET y el caso de un DELETE
     if request.method == 'GET':
         return get_user(request, id)
+    elif request.method == 'PUT':
+        return user_update(request, id)
     else:
         return user_delete(request, id)
 
@@ -205,6 +207,44 @@ def user_delete(request, id):
         user.save()
         # Devolvemos que no hay contenido porque lo pudimos borrar
         return Response(status=status.HTTP_204_NO_CONTENT)
+    except models.User.DoesNotExist:
+        # Si no existe le damos un 404
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+def user_update(request, id):
+    # Necesitamos un try-catch porque tal vez el usuario no existe
+    try:
+        # Buscamos al usuario por ID
+        user = models.User.objects.get(pk=id)
+        # Creamos el serializer, con el context como el user
+        serializer = serializers.UserDetailsSerializer(data=request.data, context={'user': user})
+        # Vemos que sea válido, sinó damos error
+        if serializer.is_valid():
+            # En caso que sea el usuario, permitimos el cambio de balance
+            if request.user.groups.all()[0].name == constants.GROUP_USER:
+                # Cambiamos balance, accedemos así porque como usamos un "source" en el campo
+                # Al recibirlo lo toma en la jerarquía del "source" que habíamos definido
+                user.account.balance = serializer.validated_data.get('account')['balance']
+                # Guardamos
+                user.account.save()
+            else:
+                # Vemos que no se saque el rol a sí mismo
+                if id == request.user.id and serializer.groups[0].name != constants.GROUP_ADMIN:
+                    return Response({"Error": "No se puede cambiar el propio rol"}, status=status.HTTP_400_BAD_REQUEST)
+                # Recuperamos el nuevo rol, accedemos así porque el objeto es un OrderedDic
+                group = Group.objects.get(name=serializer.validated_data.get('groups')[0].get('name'))
+                # Cambiamos balance, accedemos así porque como usamos un "source" en el campo
+                # Al recibirlo lo toma en la jerarquía del "source" que habíamos definido
+                user.account.balance = serializer.validated_data.get('account')['balance']
+                # Sacamos roles actuales
+                user.groups.clear()
+                # Agregamos el nuevo rol
+                user.groups.add(group)
+                # Guardamos
+                user.account.save()
+                user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except models.User.DoesNotExist:
         # Si no existe le damos un 404
         return Response(status=status.HTTP_404_NOT_FOUND)

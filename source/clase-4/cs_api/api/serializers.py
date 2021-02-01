@@ -32,12 +32,17 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     email = serializers.CharField(read_only=True)
     username = serializers.CharField(read_only=True)
-    # Definimos balance como un method field porque está asociado a la Account del user
-    balance = serializers.SerializerMethodField()
+    # Definimos balance como un float field con un source indicando de donde sale
+    balance = serializers.FloatField(source="account.balance", label="balance")
 
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'groups', 'balance')
 
-    def get_balance(self, obj):
-        return obj.account.balance
+    # Agregamos el "validate" para ver que no estén tratando de sacar balance
+    def validate(self, data):
+        # Usamos un context, que es algo que se le puede pasar al serializer al momento de instanciarlo
+        if data['account']['balance'] < self.context['user'].account.balance:
+            raise serializers.ValidationError(
+                "Invalid balance, cannot be less than current")
+        return data

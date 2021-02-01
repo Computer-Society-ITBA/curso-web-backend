@@ -190,7 +190,7 @@ Como mencionamos, Django tiene un modelo default de [usuario](https://docs.djang
 
 ### Extendiendo al Usuario
 
-Para extender al usuario vamos a empezar agregando nuestro modelo `Account` en `api/models.py`, que es lo que vamos a usar para extender al usuario:
+Para extender al usuario vamos a empezar agregando nuestro modelo `Account` en `api/models.py`, que es lo que vamos a usar para extender al usuario (hay [alternativas](https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html) a como extender al usuario también):
 ```python
 # Importamos a la clase "models" de Django
 from django.db import models
