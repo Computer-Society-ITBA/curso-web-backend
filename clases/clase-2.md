@@ -12,10 +12,10 @@ principal: false
 En esta clase vamos a ver como crear usuarios, como autenticarlos y como crear roles para los mismos.
 
 Los temas de esta clase son:
-- [Que es la Autenticacion](#que-es-la-autenticacion)
+- [Qué es la Autenticación](#que-es-la-autenticacion)
 - [JWT Tokens](#jwt-tokens)
-    * [Como se arma un JWT Token](#como-se-arma-un-jwt-token)
-    * [Como funciona en nuestro caso](#como-funciona-en-nuestro-caso)
+    * [Cómo se arma un JWT Token](#como-se-arma-un-jwt-token)
+    * [Cómo funciona en nuestro caso](#como-funciona-en-nuestro-caso)
 - [Modelos](#modelos)
 - [Serializers vs Forms](#serializers-vs-forms)
 - [Usuarios](#usuarios)
@@ -26,17 +26,17 @@ Los temas de esta clase son:
         + [Serializer para el usuario](#serializer-para-el-usuario)
         + [Función en para crear el usuario](#funci-n-en-para-crear-el-usuario)
         + [URL para crear un usuario](#url-para-crear-un-usuario)
-    * [Probando la creacion del usuario](#probando-la-creacion-del-usuario)
+    * [Probando la creación del usuario](#probando-la-creacion-del-usuario)
     * [Endpoint para obtener usuarios](#endpoint-para-obtener-usuarios)
-- [Autenticacion](#autenticacion)
+- [Autenticación](#autenticacion)
     * [Log Out](#log-out)
-- [Autorizacion](#autorizacion)
+- [Autorización](#autorizacion)
     * [Usando decorators](#usando-decorators)
     * [A mano](#a-mano)
-    * [Probando la autorizacion](#probando-la-autorizacion)
+    * [Probando la autorización](#probando-la-autorizacion)
 - [Grupos y Permisos](#grupos-y-permisos)
-    * [Como crear un grupo](#como-crear-un-grupo)
-    * [Como asignar grupos](#como-asignar-grupos)
+    * [Cómo crear un grupo](#como-crear-un-grupo)
+    * [Cómo asignar grupos](#como-asignar-grupos)
     * [Permisos hechos por nosotros](#permisos-hechos-por-nosotros)
 
 ***
@@ -44,7 +44,7 @@ Los temas de esta clase son:
 
 ## Setup
 
-Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiendola, [aca](bases/base-clase-2.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
+Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiendola, [acá](bases/base-clase-2.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
 
 **NOTA**: Si nos pudiste seguir, no vamos a usar los endpoints de prueba que armamos, así que podes borrar las funciones de la view (`api/views.py`) y los urls (`cs_api/urls.py`) y no tenés que hacer esta configuración.
 
@@ -82,7 +82,7 @@ python manage.py runserver
 ***
 ***
 
-## Que es la Autenticacion
+## Que es la Autenticación
 
 Vamos a empezar diferenciando *Autenticación* y *Autorización*.
 
@@ -105,7 +105,7 @@ Hay muchos diferentes tipos de *Tokens*, pero nosotros queremos que nuestra API 
 
 Estos *Tokens* son especiales porque permiten autorizar al usuario con solo el token y no hace falta guardar información del *Token* en la base de datos.
 
-### Como se arma un JWT Token
+### Cómo se arma un JWT Token
 
 Los [**JWT Tokens**](https://jwt.io/introduction) tienen 3 partes:
 1. **Header** --> Generalmente consiste de 2 partes, el tipo de token (en este caso es `JWT`) y el algoritmo que se usa para firmarlo (`RSA` o `HMAC SHA256`). Ese JSON se codifica en **Base64Url** y es la primera parte:
@@ -130,7 +130,7 @@ Siempre van a tener esta forma: `xxxxx.yyyyy.zzzzz` (son más largos, pero tiene
 
 **IMPORTANTE**: Los tokens vencen, una vez que el token está vencido, no es más válido.
 
-### Como funciona en nuestro caso
+### Cómo funciona en nuestro caso
 
 En nuestro caso, cuando hagamos un *log in*, la API va a generar un JWT Token para el usuario y es lo que nos responde si el log in fue exitoso.
 
@@ -401,7 +401,7 @@ curl http://localhost:8000/api/accounts
 
 ***
 
-## Autenticacion
+## Autenticación
 
 Como mencionamos antes, vamos a usar **JWT Tokens** para autenticar y autorizar a los usuarios.
 
@@ -457,7 +457,7 @@ Simplemente si uno quiere hacer un *Log Out* y dejar de usar la API, solo basta 
 
 ***
 
-## Autorizacion
+## Autorización
 
 Ahora ya tenemos **Autenticación**, pero nos hace falta definir **Autorización**, sin eso no sirven nuestros tokens.
 
@@ -509,7 +509,7 @@ def get_accounts(request):
     return Response(users, status=status.HTTP_200_OK)
 ```
 
-### Probando la autorizacion
+### Probando la autorización
 
 Una vez que mezclamos las 2 formas de manejar la autorización, podemos hacer pruebas.
 
@@ -538,13 +538,13 @@ Un **grupo** es una forma de categorizar usuarios y de esa forma darles permisos
 
 Los *grupos* (o roles) nos sirven para definir acciones que nuestros distintos tipos de usuarios pueden realizar. En nuestro caso vamos a tener 2 grupos, `user` y `admin`. En el caso de nuestra API bancaria no hay mucha diferencia entre las acciones que puede hacer un admin y un usuario. La diferencia es que el `admin` va a poder borrar usuarios y cambiarles el grupo a los usuarios.
 
-### Como crear un grupo
+### Cómo crear un grupo
 
 No vamos a necesitar un endpoint para esto porque queremos crearlos una sola vez a los grupos. Tenemos 2 opciones:
 1. Crearlos a mano desde la consola de admin --> Si queremos llevar nuestro código a otro lado sin la base, tenemos que volver a hacerlo, y es poco práctico
 2. Armar un pequeño código que los cree solos
 
-Crear un grupo es tan facil como crear un usuario, pero antes queremos definir los nombres en algún lugar, en el archivo `api/constants.py` (si no existe lo creamos) vamos a definir nuestras constantes de ahora en más:
+Crear un grupo es tan fácil como crear un usuario, pero antes queremos definir los nombres en algún lugar, en el archivo `api/constants.py` (si no existe lo creamos) vamos a definir nuestras constantes de ahora en más:
 ```python
 GROUP_USER = "user"
 GROUP_ADMIN = "admin"
@@ -585,7 +585,7 @@ El código lo que hace es usar el método `get_or_create` de los modelos, de for
 
 **NOTA**: Usamos un *try-catch* con un *OperationalError* para evitar problemas al hacer las migraciones si clonamos el proyecto. Como antes de hacer las migraciones no hay tablas, puede generar una excepción, pero con esto lo evitamos
 
-### Como asignar grupos
+### Cómo asignar grupos
 
 Ahora tenemos nuestros grupos, pero no se los asignamos a nuestros usuarios, entonces hay que cambiar eso.
 
