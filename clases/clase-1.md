@@ -12,7 +12,7 @@ principal: false
 Durante este curso van a aprender qué es una API REST, como construir una API REST y como probarla. A lo largo de las clases vamos a ir armando una API Bancaria, como dice la página inicial del curso. Durante las clases vamos a estar usando la palabra `terminal`, en este caso va a ser sinónimo de `consola`, y es la consola o terminal de la computadora que estén usando.
 
 Los contenidos de esta clase son:
-- [Que es una API](#que-es-una-api)
+- [Qué es una API](#que-es-una-api)
 - [Como se usa una API](#como-se-usa-una-api)
   * [Como se compone una request HTTP](#como-se-compone-una-request-http)
   * [Como hacemos una request HTTP](#como-hacemos-una-request-http)
@@ -37,7 +37,7 @@ Los contenidos de esta clase son:
 
 ***
 
-## Que es una API
+## Qué es una API
 
 Una *API* es una **Application Programming Interface**. Básciamente es un intermediario entre 2 aplicaciones que necesitan comunicarse.
 
