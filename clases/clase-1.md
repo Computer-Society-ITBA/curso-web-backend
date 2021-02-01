@@ -22,11 +22,11 @@ Los contenidos de esta clase son:
   * [Cómo empezar con Django](#cómo-empezar-con-django)
   * [Consola de Admin](#consola-de-admin)
   * [Cómo crear la API](#cómo-crear-la-api)
-  * [Cuales son los contenidos de lo que creamos](#cuales-son-los-contenidos-de-lo-que-creamos)
+  * [Cuáles son los contenidos de lo que creamos](#cuáles-son-los-contenidos-de-lo-que-creamos)
 - [Cómo se arma un endpoint](#cómo-se-arma-un-endpoint)
   * [Instalar DjangoRestFramework](#instalar-djangorestframework)
   * [Crear una View](#crear-una-view)
-  * [Registar la URL](#registar-la-url)
+  * [Registrar la URL](#registrar-la-url)
   * [Probarlo](#probarlo)
 - [Ejemplos de Endpoints](#ejemplos-de-endpoints)
 - [Ejercicios](#ejercicios)
@@ -39,7 +39,7 @@ Los contenidos de esta clase son:
 
 ## Qué es una API
 
-Una *API* es una **Application Programming Interface**. Básciamente es un intermediario entre 2 aplicaciones que necesitan comunicarse.
+Una *API* es una **Application Programming Interface**. Básicamente es un intermediario entre 2 aplicaciones que necesitan comunicarse.
 
 Se puede pensar la siguiente analogía:
 
@@ -56,7 +56,7 @@ Una *API* se usa porque provee una mayor seguridad al servidor que está detrás
 
 ## Cómo se usa una API
 
-Hay varias formas de comunicarse con una API, pero nos vamos a concentrar en el estándar **HTTP** y como hacer una *HTTP Request*.
+Hay varias formas de comunicarse con una API, pero nos vamos a concentrar en el estándar **HTTP** y como hacer un *HTTP Request*.
 
 **HTTP** es el *[Hypertext Transfer Protocol]((https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol))*, es un protocolo de aplicación basado en el esquema *request-response*. El cliente manda una *request* al servidor, y el servidor responde con una *response*.
 
@@ -66,7 +66,7 @@ HTTP define un [conjunto de métodos](https://developer.mozilla.org/en-US/docs/W
  - **PUT** --> Sirve para reemplazar todas las representaciones del recurso especificado.
  - **DELETE** --> Borra el recurso especificado.
 
-Si tuvieramos que resumir en 1 palabra para que se usa cada método diríamos:
+Si tuviéramos que resumir en 1 palabra para qué se usa cada método diríamos:
  - **GET** --> *buscar*
  - **POST** --> *crear*
  - **PUT** --> *actualizar*
@@ -95,10 +95,10 @@ Esto debería devolver algo similar a:
 ```
 HTTP/1.1 200 OK
 Expires: -1
-{MAS HEADERS}
+{MÁS HEADERS}
 Transfer-Encoding: chunked
 
-<!doctype html>{MAS HTML}</html>
+<!doctype html>{MÁS HTML}</html>
 ```
 
 ***
@@ -115,7 +115,7 @@ Para que una API sea considerada *REST* o *RESTful* debe cumplir una serie de [c
      + los recursos son identificables y distinguibles.
      + los recursos deben poder ser manipulables a partir de la representación recibida.
      + los mensajes deben ser descriptivos para indicarle al cliente como procesar la información.
-     + hipertexto/hipermedia disponible, el cliente puede usar hipervínculos para acceder a la información relacionada al recurso.
+     + hipertexto/hipermedia disponible, el cliente puede usar hipervínculos para acceder a la información relacionada con el recurso.
  - Un sistema en capas que organiza cada servidor involucrado en el procesamiento de una request, todo invisible para el cliente.
  - Código-on-demand (opcional), que es la habilidad de enviar código ejecutable del servidor al cliente para extender la funcionalidad del cliente 
 
@@ -283,7 +283,7 @@ Ahora corremos el proyecto otra vez para ver que todo esté en orden:
 python manage.py runserver
 ```
 
-### Cuales son los contenidos de lo que creamos
+### Cuáles son los contenidos de lo que creamos
 
 Estuvimos creando muchas cosas, y se agregaron muchos archivos, vamos a ver para que sirve cada uno:
 ```
@@ -362,7 +362,7 @@ La parte `return Response({"hello": "world"}, status=status.HTTP_200_OK)` se ocu
 
 La función recibe una `request`, que tiene información sobre le HTTP request, como headers y el body.
 
-### Registar la URL
+### Registrar la URL
 
 Una vez creada la view, simplemente hay que importarla en `cs_api/urls.py` y agregarla de la siguiente manera:
 ```python

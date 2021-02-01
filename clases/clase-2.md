@@ -286,10 +286,10 @@ class UserSerializer(serializers.ModelSerializer):
     # Ponemos que solo queremos esos 3 campos
     class Meta:
         model = User
-        fields = ('id', 'email', 'username')
+        fields = ('id', 'email', 'username', 'is_active')
 ```
 
-Este serializer sirve para devolver el usuario que acabamos de crear, simplemente estamos especificando que queremos que devuelva esos 3 campos.
+Este serializer sirve para devolver el usuario que acabamos de crear, simplemente estamos especificando que queremos que devuelva esos 4 campos (el último campo es para ver si está activo o no el usuario).
 
 #### Función en para crear el usuario
 

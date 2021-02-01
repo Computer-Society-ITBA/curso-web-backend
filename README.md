@@ -31,6 +31,12 @@ There are 4 main folders in this repository:
 
 The `index.md` file is the main page file that's shown in the website.
 
+### Resources
+
+Here are some resources useful to building the content and structure:
+- [Spell Checking](https://languagetool.org/)
+- [Generating Table of Contents](https://ecotrust-canada.github.io/markdown-toc/)
+
 ### Authors
 
 Content and Layout: Gonzalo Hirsch

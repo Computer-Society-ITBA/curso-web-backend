@@ -27,11 +27,6 @@ curl -X POST -d 'username=USERNAME&password=PASSWORD' http://localhost:8000/api/
 curl -X POST -F 'username=USERNAME' -F 'email=EMAIL' -F 'password1=PASSWORD' -F 'password2=PASSWORD' http://localhost:8000/api/accounts
 ```
 
-### Borrar usuario:
-```bash
-curl -X DELETE -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts/1
-```
-
 ### Listar usuarios:
 ```bash
 curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts?p=P&s=S
@@ -40,6 +35,16 @@ curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts?p=P&s=S
 ### Filtrar usuarios:
 ```bash
 curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts?q=BUSQUEDA&p=P&s=S
+```
+
+### Perfil de usuario
+```bash
+curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts/ID
+```
+
+### Borrar usuario:
+```bash
+curl -X DELETE -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts/1
 ```
 
 ## Transacciones
