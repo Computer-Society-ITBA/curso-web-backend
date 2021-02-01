@@ -702,3 +702,7 @@ curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c
 # Con id del mismo usuario, borrarse a si mismo, en mi caso mi id es 2
 curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIxMDgwNDIsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.uNRkEJ1jnzKU6l5dXA2bc4Z5sXJ4DhuQ1fDQNhI-xIU" http://localhost:8000/api/accounts/2
 ```
+
+***
+
+Eso es todo por esta clase, pueden seguir con la [clase 3](clase-3.md)

@@ -12,7 +12,28 @@ principal: false
 En esta clase vamos a ver como funcionan los modelos en detalle, como armar una búsqueda y paginación.
 
 Los temas de esta clase son:
-TODO TEMAS
+- [Modelos](#modelos)
+    * [Métodos de los Modelos](#métodos-de-los-modelos)
+    * [Campos de los Modelos](#campos-de-los-modelos)
+- [Creando nuevos modelos](#creando-nuevos-modelos)
+- [Creando transacciones](#creando-transacciones)
+    * [Form](#form)
+    * [Permiso](#permiso)
+    * [Serializer](#serializer)
+    * [View Funcional](#view-funcional)
+    * [Registrar URL](#registrar-url)
+    * [Probamos las transacciones](#probamos-las-transacciones)
+- [Búsqueda](#búsqueda)
+    * [Cómo funciona la búsqueda](#cómo-funciona-la-búsqueda)
+    * [Django y Búsqueda](#django-y-búsqueda)
+    * [Implementando la búsqueda](#implementando-la-búsqueda)
+- [Paginación](#paginación)
+    * [Cómo funciona la paginación](#cómo-funciona-la-paginación)
+    * [Django y paginación](#django-y-paginación)
+    * [Implementando paginación](#implementando-paginación)
+- [Ejercicios](#ejercicios)
+    * [Ejercicio 1 - Búsqueda de transacciones](#ejercicio-1---búsqueda-de-transacciones)
+    * [Ejercicio 2 - Paginación de transacciones](#ejercicio-2---paginación-de-transacciones)
 
 ***
 ***
@@ -589,3 +610,7 @@ Incluir también casos de prueba.
 Al endpoint que agregaron en el ejercicio anterior, implementar la paginación para el mismo de la misma manera que para los usuarios. Usar los parámetros `p` y `s` como antes, y se puede utilizar un código muy similar al de los usuarios.
 
 Incluir también casos de prueba.
+
+***
+
+Eso es todo por esta clase, pueden seguir con la [clase 4](clase-4.md)

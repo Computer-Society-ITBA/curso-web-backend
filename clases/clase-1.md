@@ -548,3 +548,7 @@ Como mencionamos al principio, vamos a armar una API REST Bancaria, que va a ten
 - `/auth/login` con POST            --> Loguearse en la API
 
 Esta es la especificación de la API que vamos a empezar a armar la clase que viene, obviamente cada endpoint tiene más detalles que se verán al momento de que los encaremos.
+
+***
+
+Eso es todo por esta clase, pueden seguir con la [clase 2](clase-2.md)
