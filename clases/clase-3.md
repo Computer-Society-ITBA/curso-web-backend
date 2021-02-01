@@ -364,7 +364,7 @@ Y si probamos con diferentes búsquedas vemos que funciona.
 
 ***
 
-## Paginacion
+## Paginacion
 
 Como está ahora nuestra API, si no filtramos los usuarios obtenemos todos los que tenemos. Esto es poco práctico, si tenemos 1 millón de usuarios nos vamos a traer la base de datos entera y no estaría bueno.
 
@@ -381,6 +381,8 @@ Y también nuestra API ahora va a devolver algo más además de los resultados, 
 - **prev** --> Link a la página anterior
 - **next** --> Link a la página siguiente
 - **last** --> Link a la última página
+
+**NOTA**: Es importante darle a los datos paginados algún orden para que siempre que se pida la misma página se obtengan los mismos resultados. En nuestro caso podemos ordenar usuarios por ID (siendo que van a estar ordenados por orden de creación) y las transacciones por fecha de realizacón, ambos ordenes descendentes.
 
 ### Django y paginacion
 
@@ -512,7 +514,7 @@ def get_accounts(request):
 
 Usamos la función `extract_paging_from_request` para extraer los query param de paginación, luego dependiendo de si hay un query o no, hacemos el filtro o no. Con los datos, generamos el paginator y nos quedamos con la página que queremos. Serializamos los resultados y agregamos lo headers de paginación a la respuesta.
 
-Para probar lo que se puede hacer es:
+Para probar lo que se puede hacer es esto (con `-i` podemos ver los headers de la respuesta, y definimos `s=1` para que podamos ver lso resultados.):
 ```bash
 curl -i -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyOTU3MiwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.Lteb8xlmcCjCCbYUtcuMR2u06H9TgjnauWQRAVJ94N4" 'http://localhost:8000/api/accounts?p=1&s=1'
 ```
