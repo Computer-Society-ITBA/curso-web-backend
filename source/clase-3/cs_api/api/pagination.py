@@ -2,8 +2,6 @@
 import urllib.parse as urlparse
 # Importamos nuestras constantes
 from api import constants
-from rest_framework.response import Response
-from rest_framework import status
 
 # Agrega headers de paginación a la response
 def add_paging_to_response(request, response, query_data, page, total_pages):
@@ -54,12 +52,3 @@ def replace_page_param(url, new_page):
     parsed = parsed._replace(query=new_query)
 
     return urlparse.urlunparse(parsed)
-
-# Extrae y valida los headers de paginación
-def extract_paging_from_request(request, page_default=1, page_size_default=6):
-    try:
-        page = int(request.GET.get('p', page_default))
-        page_size = int(request.GET.get('s', page_size_default))
-    except ValueError:
-        return None, None, Response(status=status.HTTP_400_BAD_REQUEST)
-    return page, page_size, None

@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 # Importamos nuestros forms y modelos
-from api import forms, models, serializers, constants, pagination
+from api import forms, models, serializers, constants, pagination, extractor
 # Importamos nuestro permiso
 from api.permissions import IsAdmin, IsUser
 # Importamos las transacciones
@@ -14,6 +14,8 @@ from django.db import transaction, IntegrityError
 from django.contrib.auth.models import Group
 # Importamos al Paginator
 from django.core.paginator import Paginator, EmptyPage
+# Importamos para los queries
+from django.db.models import Q
 
 # Esta función es la que registramos en los urls
 
@@ -52,7 +54,7 @@ def get_accounts(request):
     # Extraemos el query param, ponemos None como default
     query = request.GET.get('q', None)
     # Estraemos los query de paginación, y si hay un error devolvemos eso
-    page, page_size, err = pagination.extract_paging_from_request(
+    page, page_size, err = extractor.extract_paging_from_request(
         request=request)
     if err != None:
         return err
@@ -108,8 +110,57 @@ def user_delete(request, id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 @permission_classes([IsUser])
+def transaction_view(request):
+    # Hacemos el caso de un GET y el caso de un POST
+    if request.method == 'GET':
+        return get_transactions(request)
+    else:
+        return create_transaction(request)
+
+
+def get_transactions(request):
+    # Extraemos query params de fechas, y si hay un error devolvemos eso
+    inicio, fin, err = extractor.extract_limits_from_request(
+        request=request)
+    if err != None:
+        return err
+    # Estraemos los query de paginación, y si hay un error devolvemos eso
+    page, page_size, err = extractor.extract_paging_from_request(
+        request=request)
+    if err != None:
+        return err
+
+    # No hay caso en que haya uno y no otro, así que en este caso es lo mismo si ponemos un and o un or
+    if inicio != None and fin != None:
+        # Hacemos 2 filtros, primero vemos transacciones del usuario en donde es destion u origen
+        # Después filtramos por fechas y ordenamos por id descendente
+        queryset = models.Transaction.objects.filter(
+            (Q(destino=request.user) | Q(origen=request.user)), fecha_realizada__range=(inicio, fin)).order_by('-id')
+    else:
+        # Hacemos 1 solo filtro, con transacciones del usuario
+        queryset = models.Transaction.objects.filter(
+            (Q(destino=request.user) | Q(origen=request.user))).order_by('-id')
+
+    # Usamos un try catch por si la página está vacía
+    try:
+        # Convertimos a Paginator
+        query_paginator = Paginator(queryset, page_size)
+        # Nos quedamos con la página que queremos
+        query_data = query_paginator.page(page)
+        # Serializamos a los usuarios
+        serializer = serializers.TransactionSerializer(query_data, many=True)
+        # Agregamos a los usuarios a la respuesta
+        resp = Response(serializer.data)
+        # Agregamos headers de paginación a la respuesta
+        resp = pagination.add_paging_to_response(
+            request, resp, query_data, page, query_paginator.num_pages)
+        return resp
+    except EmptyPage:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
 def create_transaction(request):
     # Creamos el form
     form = forms.CreateTransactionForm(request.POST)

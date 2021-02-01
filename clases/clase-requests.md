@@ -44,7 +44,17 @@ curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts?q=BUSQUEDA
 
 ## Transacciones
 
-### Crear transaccion
+### Crear transacción:
 ```bash
 curl -X POST -H "Authorization: JWT TOKEN" -F 'destino=DESTINO_ID' -F 'cantidad=CANTIDAD' http://localhost:8000/api/transactions
+```
+
+### Listar transacciones:
+```bash
+curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/transactions?p=P&s=S
+```
+
+### Buscar transacciones:
+```bash
+curl -G -H "Authorization: JWT TOKEN" --data-urlencode "inicio=INICIO" --data-urlencode "fin=FIN" 'http://localhost:8000/api/transactions?p=P&s=S'
 ```

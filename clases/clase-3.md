@@ -392,14 +392,13 @@ Este `Paginator` recibe la lista de objetos que tiene que paginar y los tamaños
 
 ### Implementando paginación
 
-Para implementar nuestra paginación vamos a necesitar ayuda de 3 funciones extra que vamos a crear en un archivo que se llame `api/pagination.py`. Vamos a armar una función que agregue los headers de paginación, otra que cambie el parámetro viejo de paginación por el nuevo que queremos para los headers, y una última que extraiga los headers de paginación (para poder reusarla después):
+Para implementar nuestra paginación vamos a necesitar ayuda de 3 funciones extra que vamos a crear en un archivo que se llame `api/pagination.py` y `api/extractor.py`. Vamos a armar una función que agregue los headers de paginación, otra que cambie el parámetro viejo de paginación por el nuevo que queremos para los headers, y una última que extraiga los headers de paginación (para poder reusarla después):
 ```python
+# ARCHIVO --> api/pagination.py
 # Importamos para parsear la url
 import urllib.parse as urlparse
 # Importamos nuestras constantes
 from api import constants
-from rest_framework.response import Response
-from rest_framework import status
 
 # Agrega headers de paginación a la response
 def add_paging_to_response(request, response, query_data, page, total_pages):
@@ -451,6 +450,10 @@ def replace_page_param(url, new_page):
 
     return urlparse.urlunparse(parsed)
 
+# ARCHIVO --> api/extractor.py
+from rest_framework.response import Response
+from rest_framework import status
+
 # Extrae y valida los headers de paginación
 def extract_paging_from_request(request, page_default=1, page_size_default=6):
     try:
@@ -473,6 +476,9 @@ HEADER_PREV = "prev"
 
 Del lado de la función en `api/views.py`, hay que hacer unos pequeños cambios para implementar la paginación:
 ```python
+# Importamos pagination y extractor
+from api import forms, models, serializers, constants, pagination, extractor
+
 def get_accounts(request):
     # Chequear que no sea anónimo
     if request.user.is_anonymous:
@@ -480,7 +486,7 @@ def get_accounts(request):
     # Extraemos el query param, ponemos None como default
     query = request.GET.get('q', None)
     # Estraemos los query de paginación, y si hay un error devolvemos eso
-    page, page_size, err = pagination.extract_paging_from_request(
+    page, page_size, err = extractor.extract_paging_from_request(
         request=request)
     if err != None:
         return err
@@ -525,4 +531,61 @@ curl -i -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lk
 
 ### Ejercicio 1 - Búsqueda de transacciones
 
+Agregar un endpoint para obtener el historial de transacciones. Refactorizar el código para crear una transacción con POST para que acepte también un GET (misma forma que con el endpoint para los usuarios), para simplificar podemos decir que solo el usuario que tenga permiso `IsUser` puede usarlo, para no hacer chequeos de permisos a mano.
+
+A este endpoint para obtener transacciones (solo las que el usuario que busca fue origen o destino), agregarle búsqueda. Vamos a buscar por rango de fechas en que se hicieron las transacciones. Para simplificar los chequeos, el default para el límite inferior es la fecha de creación del usuario que busca, y el default para el límite superior es la fecha de hoy. Los query params deberían ser `inicio` y `fin`, estas fecha y hora deberían venir en formato `%Y-%m-%d %H:%M:%S` (por ejemplo `1999-10-30 01:55:19` es válido).
+
+**NOTA**: Los objetos tienen que ser de tipo `datetime`, no `date`, porque tenemos un `datetime` en la base.
+
+Para usar un rango en un filter se puede usar:
+```python
+models.Transaction.filter(fecha_realizada__range=(START, END))
+```
+
+Para extraer los query params de fechas límite pueden usar esta función que debería ir en `api/extractor.py`:
+```python
+from datetime import datetime
+import pytz
+# Definimos nuestro formato de fechas
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+# Extrae y valida los query params de fechas
+def extract_limits_from_request(request, limit_low_default=None, limit_high_default=datetime.now()):
+    if limit_low_default == None:
+        limit_low_default = request.user.date_joined
+    try:
+        # Extraemos como strings con default None
+        inicio_str = request.GET.get('inicio', None)
+        fin_str = request.GET.get('fin', None)
+        # Si ninguno vino, devolvemos None
+        if inicio_str == None and fin_str == None:
+            return None, None, None
+        # Convertimos cada uno
+        if inicio_str == None:
+            inicio = limit_low_default
+        else:
+            inicio = datetime.strptime(inicio_str, DATE_FORMAT)
+        if fin_str == None:
+            fin = limit_high_default
+        else:
+            fin = datetime.strptime(fin_str, DATE_FORMAT)
+    except ValueError:
+        return None, None, Response(status=status.HTTP_400_BAD_REQUEST)
+    # Localizamos las fechas+horas para evitar warnings
+    return pytz.utc.localize(inicio), pytz.utc.localize(fin), None
+```
+
+**NOTA**: Para poder aplicar 2 filtros se puede hacer `models.Transaction.objects.filter(FILTRO_1, FILTRO_2)`, y para poder aplicar 2 condiciones con un `OR` o `AND` en un filtro hay que importar un modelo especial que permite hacer esto (`from django.db.models import Q`) que se usa como `(Q(destino=request.user) | Q(origen=request.user))` (este se fija que el origen sea el usuario o el destino sea el usuario).
+
+También es necesario agregar en `cs_api/settings.py` una configuración para indicar que se usan timezones:
+```python
+USE_TZ = True
+```
+
+Incluir también casos de prueba.
+
 ### Ejercicio 2 - Paginación de transacciones
+
+Al endpoint que agregaron en el ejercicio anterior, implementar la paginación para el mismo de la misma manera que para los usuarios. Usar los parámetros `p` y `s` como antes, y se puede utilizar un código muy similar al de los usuarios.
+
+Incluir también casos de prueba.
