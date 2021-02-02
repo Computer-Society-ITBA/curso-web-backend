@@ -300,6 +300,182 @@ Y con esto nuestra API ya está funcionando y tiene todo lo que queríamos.
 
 ## Mailing
 
+Algo muy utilizado en las aplicaciones hoy en día es el envío de mails. Sirve como algo informativo para el usuario o para generar interés en la aplicación. Otro uso muy común es para poder verificar la cuenta de un usuario, para evitar que alguien cree y use muchos usuarios sin verificarlos.
+
+### Cómo funciona
+
+Para poder verificar a un usuario necesitamos alguna forma de darle un secreto que él solo nos pueda responder. Para hacer esto, cuando se crea un usuario vamos a generar un token especial que se guarda en la base de datos, y que al momento de hacer click en el link que le llega por mail, se verifica con la base si es válido o no.
+
+### Configuración
+
+Es relativamente simple configurar mailing en Django, lo primero que hay que hacer es agregar algunas configuraciones en `cs_api/settings.py`:
+```python
+import os
+# Mailing
+# De done sale el mail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+MAILER_EMAIL_BACKEND = EMAIL_BACKEND
+# Host del mail, gmail en este caso
+EMAIL_HOST = 'smtp.gmail.com'
+# Puerto de gmail
+EMAIL_PORT = 587
+# Indicamos que use TLS
+EMAIL_USE_TLS = True
+# Desactivamos SSL
+EMAIL_USE_SSL = False
+# Usuario
+EMAIL_HOST_USER = 'restreview.toptal@gmail.com'
+# Contraseña, usamos os.environ para evitar mostrarla, es más seguro
+EMAIL_HOST_PASSWORD = os.environ.get('MAIL_PASS')
+# Indicamos de donde sale el mail, es "NOMBRE<DIRECCION>"
+DEFAULT_FROM_EMAIL = 'CSBankingAPI<restreview.toptal@gmail.com>'
+# Asunto del mail
+SUBJECT = 'Verificá tu Cuenta'
+# De donde salen los templates
+SETTINGS_PATH = os.path.normpath(os.path.dirname(__file__))
+TEMPLATE_DIRS = (
+    os.path.join(SETTINGS_PATH, 'templates'),
+)
+```
+
+Noten que usamos `os.environ.get('MAIL_PASS')` para importar la contraseña del mail, esto hace que sea seguro porque no la estamos guardando en el código. Para poder hacer esto, en la terminal donde está corriendo el proyecto hay que hacer:
+- Si tienen Linux/OSx (Mac):
+    ```bash
+    # Crear la variable
+    export MAIL_PASS='TU_CONTRASEÑA'
+    # Ver que se creó bien
+    echo $MAIL_PASS
+    ```
+- Si tienen Windows pueden usar este [link](http://www.dowdandassociates.com/blog/content/howto-set-an-environment-variable-in-windows-command-line-and-registry/) para ver como hacerlo
+
+### Templates
+
+Como vamos a estar enviando emails, podemos usar templates para que los mails sean bonitos. Para hacer esto ya creamos unas templates que pueden bajarse [acá](bases/templates.zip). Ese ZIP tiene 2 archivos dentro de una carpeta `templates`, `emailVerify.html` e `emailVerify.txt`. El primero es la versión HTML de la template, y el segundo es la versión texto de la template, por si no se puede usar HTML. 
+
+Esta carpeta `templates` debería estár adentro de la carpeta `api`.
+
+### Envío de mails
+
+Vamos a tener que armar algo para poder enviar nuestros mails, para eso vamos a crear un nuevo archivo (`api/mailing.py`) para poner toda nuestra lógica ahí:
+```python
+# Mailing
+from django.contrib.sites.shortcuts import get_current_site
+from django.shortcuts import render
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
+from django.contrib.auth.tokens import default_token_generator
+
+# Envía el email de confirmación
+def send_confirmation_email(user, request):
+    # Obtiene el link al sitio
+    current_site = get_current_site(request)
+    # Genera los templates
+    plaintext = get_template('emailVerify.txt')
+    html_template = get_template('emailVerify.html')
+    # Le pasa los datos a cada template para que la customize
+    data = {
+        'user': user,
+        'domain': current_site.domain,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': default_token_generator.make_token(user),  # Genera el token
+    }
+    text_content = plaintext.render(data)
+    html_content = html_template.render(data)
+    # Seteamos asunto
+    mail_subject = 'Verificá tu Cuenta'
+    # Definimos el mail con contenido texto
+    msg = EmailMultiAlternatives(mail_subject, text_content, to=[user.email])
+    # Agregamos versión HTML
+    msg.attach_alternative(html_content, "text/html")
+    # Enviamos
+    msg.send()
+```
+
+Este método se ocupa de llenar los templates con los datos del usuario y enviar el mail.
+
+### Creación de usuario sin verificar
+
+Hay que modificar nuestro código de creación de un usuario para poder agregar que empiece sin verificar, y que además le mande un mail cuando lo crea. Para esto vamos a `api/views.py` y agregamos esto:
+```python
+from api import forms, models, serializers, constants, pagination, extractor, mailing
+def create_account(request):
+    # Para usar las forms le pasamos el objeto "request.POST" porque esperamos que sea
+    # un form que fue lanzado con un POST
+    form = forms.CreateUserForm(request.POST)
+    # Vemos si es válido, que acá verifica que el mail no exista ya
+    if form.is_valid():
+        # Guardamos el usuario que el form quiere crear, el .save() devuelve al usuario creado
+        # Commit en false para que espere para guardarlo
+        user = form.save(commit=False)
+        # Marcamos como inactivo y guardamos
+        user.is_active = False
+        user.save()
+        # Agregamos por default el grupo user a todos los usuarios
+        user.groups.add(Group.objects.get(name=constants.GROUP_USER))
+        # Creamos la Account que va con el usuario, y le pasamos el usuario que acabamos de crear
+        models.Account.objects.create(user=user)
+        # Una vez que guardamos todo, enviamos el mail
+        mailing.send_confirmation_email(user, request)
+        # Respondemos con los datos del serializer, le pasamos nuestro user y le decimos que es uno solo, y depués nos quedamos con la "data" del serializer
+        return Response(serializers.UserSerializer(user, many=False).data, status=status.HTTP_201_CREATED)
+    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+Alteramos nuestra función para crear un usuario para que cree a los usuarios inicialmente no verificados, y cuando crea todo les manda un mail.
+
+### Cómo verificar la cuenta
+
+Nos falta como verificar a nuestro usuario cuando tenemos el email. 
+
+En el email viene un link que va a estar dirigido a una URL especial de nuestra API que se va a encargar de verificar a los usuarios. En `api/views.py` agregamos el método que va a verificarlos:
+```python
+# Mailing
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def activate(request, uidb64, token):
+    try:
+        # Extraemos user id y recuperamos al usuario
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = models.User.objects.get(pk=uid)
+        # Verificamos el token
+        if user != None and default_token_generator.check_token(user, token):
+            # Marcamos como activo
+            user.is_active = True
+            user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+```
+
+Y nos falta registrar la url en `cs_api/urls.py` para poder acceder a la función de recién:
+```python
+urlpatterns = [
+    ...,
+    path('api/auth/activate/<uidb64>/<token>/', views.activate, name='activate'),
+]
+```
+
+La url tiene ese formato porque va a recibir como Path Param el id del usuario en base 64 y el token.
+
+### Probamos la verificación
+
+Ahora podemos crear nuevos usuarios (va a tardar un poco más el endpoint porque está enviando el mail), y pueden ver que cuando tratan de hacer un login sin verificar la cuenta no los deja.
+
+Si crean un usuario nuevo deberían recibir un mail, y al hacer click en el botón les va a aparecer una pantalla fea que tiene un error. Eso es porque deberíamos definir en el endpoint de activación un *Redirect*, pero no tenemos a donde redirigir al usuario, y por ahora no nos importa. Si usaran curl con la url que tiene el botón con un GET, podrían ver que se puede y devuelve el status code apropiado.
+
+Una ver verificada la cuenta pueden volver a tratar de hacer un login y van a ver que funciona.
+
+Para usar un curl con el link del mail pueden hacer:
+```bash
+curl -i LINK_DEL_MAIL
+```
+
 ***
 
 ## Caso Real

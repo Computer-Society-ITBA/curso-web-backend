@@ -25,5 +25,6 @@ urlpatterns = [
     path('api/accounts/<int:id>', views.user_specific_view, name="user_specific_view"),
     path('api/transactions', views.transaction_view, name="transaction_view"),
     path('api/auth/login', obtain_jwt_token),
+    path('api/auth/activate/<uidb64>/<token>/', views.activate, name='activate'),
 ]
 

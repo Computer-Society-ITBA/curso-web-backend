@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -113,6 +114,31 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Mailing
+# De done sale el mail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+MAILER_EMAIL_BACKEND = EMAIL_BACKEND
+# Host del mail, gmail en este caso
+EMAIL_HOST = 'smtp.gmail.com'
+# Puerto de gmail
+EMAIL_PORT = 587
+# Indicamos que use TLS
+EMAIL_USE_TLS = True
+# Desactivamos SSL
+EMAIL_USE_SSL = False
+# Usuario
+EMAIL_HOST_USER = 'restreview.toptal@gmail.com'
+# Contraseña, usamos os.environ para evitar mostrarla, es más seguro
+EMAIL_HOST_PASSWORD = os.environ.get('MAIL_PASS')
+# Indicamos de donde sale el mail, es "NOMBRE<DIRECCION>"
+DEFAULT_FROM_EMAIL = 'CSBankingAPI<restreview.toptal@gmail.com>'
+# Asunto del mail
+SUBJECT = 'Verificá tu Cuenta'
+# De donde salen los templates
+SETTINGS_PATH = os.path.normpath(os.path.dirname(__file__))
+TEMPLATE_DIRS = (
+    os.path.join(SETTINGS_PATH, 'templates'),
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/

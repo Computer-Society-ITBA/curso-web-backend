@@ -55,6 +55,12 @@ Sirve para cambiar el balance o el rol:
 curl -i -X PUT -H "Authorization: JWT TOKEN" -H "Content-Type: application/json" http://localhost:8000/api/accounts/ID -d '{"balance": BALANCE,"email": "EMAIL","groups": [{"name": "GRUPO"}],"id": ID,"username": "USERNAME"}'
 ```
 
+### Verificar usuario
+Sirve con el link que viene en el mail:
+```bash
+curl -i LINK_DEL_MAIL
+```
+
 ## Transacciones
 
 ### Crear transacción:

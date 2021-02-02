@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 # Importamos nuestros forms y modelos
-from api import forms, models, serializers, constants, pagination, extractor
+from api import forms, models, serializers, constants, pagination, extractor, mailing
 # Importamos nuestro permiso
 from api.permissions import IsAdmin, IsUser, IsOwner
 # Importamos las transacciones
@@ -16,6 +16,9 @@ from django.contrib.auth.models import Group
 from django.core.paginator import Paginator, EmptyPage
 # Importamos para los queries
 from django.db.models import Q
+# Mailing
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
 
 # Esta función es la que registramos en los urls
 
@@ -37,11 +40,17 @@ def create_account(request):
     # Vemos si es válido, que acá verifica que el mail no exista ya
     if form.is_valid():
         # Guardamos el usuario que el form quiere crear, el .save() devuelve al usuario creado
-        user = form.save()
+        # Commit en false para que espere para guardarlo
+        user = form.save(commit=False)
+        # Marcamos como inactivo y guardamos
+        user.is_active = False
+        user.save()
         # Agregamos por default el grupo user a todos los usuarios
         user.groups.add(Group.objects.get(name=constants.GROUP_USER))
         # Creamos la Account que va con el usuario, y le pasamos el usuario que acabamos de crear
         models.Account.objects.create(user=user)
+        # Una vez que guardamos todo, enviamos el mail
+        mailing.send_confirmation_email(user, request)
         # Respondemos con los datos del serializer, le pasamos nuestro user y le decimos que es uno solo, y depués nos quedamos con la "data" del serializer
         return Response(serializers.UserSerializer(user, many=False).data, status=status.HTTP_201_CREATED)
     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -248,3 +257,21 @@ def user_update(request, id):
     except models.User.DoesNotExist:
         # Si no existe le damos un 404
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def activate(request, uidb64, token):
+    try:
+        # Extraemos user id y recuperamos al usuario
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = models.User.objects.get(pk=uid)
+        # Verificamos el token
+        if user != None and default_token_generator.check_token(user, token):
+            # Marcamos como activo
+            user.is_active = True
+            user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
