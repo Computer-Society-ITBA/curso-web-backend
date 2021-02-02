@@ -295,3 +295,95 @@ curl -i -X PUT -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c
 ```
 
 Y con esto nuestra API ya está funcionando y tiene todo lo que queríamos.
+
+***
+
+## Mailing
+
+***
+
+## Caso Real
+
+Vamos a ver como sería un caso real de uso de la API.
+
+Hoy en día cualquiera puede publicar su código y levantar una API en cuestión de minutos. Nosotros vamos a levantar la API en Azure (de Microsoft).
+
+### Azure
+
+[Azure](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) es un servicio de cómputo en la nube creado por *Microsoft* que ofrece una gran variedad de servicios del estilo de:
+- Software as a Service [(SaaS)](https://en.wikipedia.org/wiki/Software_as_a_service)
+- Platform as a Service [(PaaS)](https://en.wikipedia.org/wiki/Platform_as_a_service)
+- Infrastructure as a Service [(IaaS)](https://en.wikipedia.org/wiki/Infrastructure_as_a_service)
+
+Azure se puede usar para levantar nuestra API en la nube, en caso de que queramos llevar nuestra API para un producto.
+
+### Cómo se levanta
+
+No vamos a ir muy en detalle sobre como hacer esto porque cuesta plata usar **Azure**, aunque tienen una capa gratuita que se puede utilizar. Hay varios tutoriales sobre como hacerlo más en detalle, vamos a ir muy por arriba explicando los cambios necesarios para poder hacer esto.
+
+Usamos algunos servicios de **Azure** como:
+- [Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/overview) --> Sirve para hostear la API, permite escalarla
+- [Azure Database for Postgres](https://azure.microsoft.com/en-us/services/postgresql/) --> Va a ser la base de datos de la API
+
+Los cambios y acciones no son muchos (son cambios pequeños al código, pero necesarios para usar *Azure*):
+1. Tener el código en un repositorio de Github (no tiene que ser github, pero es gratis) --> Es necesario que el código esté en algún lugar en la nube guardado
+2. Cambiar el `ALLOWED_HOSTS` --> Hay que cambiar para que sea `ALLOWED_HOSTS = ['*']
+` porque vamos a tener la arquitectura de **Azure** y es necesario para esto
+3. Cambiar la base de datos --> Vamos a usar PostgreSQL en vez de SQLite (que es la base default), ya que necesitamos un servicio de base de datos y es conveniente que esté todo en el mismo lugar (*Azure*):
+    1. Instalar [psycopg2](https://pypi.org/project/psycopg2/) para poder conectarse a PostgreSQL
+        ```bash
+        pip install psycopg2
+        ```
+    2. Cambiar la configuración de la base de datos para que use PostgreSQL en vez de SQLite:
+        ```python
+        # Usamos variables de entorno por mayor seguridad
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'NAME': os.environ.get('DBNAME'), 
+                'USER': os.environ.get('DBUSER'), 
+                'PASSWORD': os.environ.get('DBPASS'),
+                'HOST': os.environ.get('DBHOST'), 
+                'PORT': '5432',
+            }
+        }
+        ```
+    3. Corregir una porción de código vieja que está en `api/admin.py` que genera un error al subir a *Azure*:
+        ```python
+        # Importamos el error que no se pudo hacer la operación
+        from django.db.utils import ProgrammingError
+        ...
+        try:
+        ...
+        # Cambiar este except para que use ProgrammingError
+        except ProgrammingError:
+        ...
+        ```
+4. Alterar la configuración de `cs_api/settings.py` para agregar:
+    ```python
+    import os
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    ```
+
+Por la parte de Azure, es necesario:
+1. Crear una **Azure App Service** para hostear la API, especificando que se usa Python como entorno para correr
+2. Crear una **Azure Database for Postgres** para la base de datos, y guardar los nombres usados
+3. Armar en el **App Service Plan** la pipeline de CI/CD para que se levante automáticamente
+
+### Resultado
+
+Luego de poder deployar todo correctamente, obtenemos una url de nuestra API `https://csitba.azurewebsites.net/`.
+
+Esta API actualmente está corriendo, así que se puede usar de la misma manera que veníamos probando nuestra API original.
+
+**NOTA:** La versión de la API levantada es una versión hecha hasta la parte de agregar fondos. El repositorio donde se puede encontrar el código de la API adaptado para usarse en Azure es [este](https://github.com/csitba/curso-web-backend-azure).
+
+### Recursos
+
+Hay una gran cantidad de tutoriales de Microsoft que explican como levantar una API en Django con Azure en mucho más detalle:
+- [Cómo armar una API en Django con PostgreSQL - Medium](https://stackpython.medium.com/how-to-start-django-project-with-a-database-postgresql-aaa1d74659d8)
+- [Ejemplo de aplicación de Django con Azure - Github](https://github.com/SunBuild/django-poll)
+- [Cómo armar una API en Django con PostgreSQL - Azure App Service](https://azure.github.io/AppService/2017/05/10/Create-Django-Web-app-with-PostgreSQL.html)
+- [Cómo deployar una API en Django con Azure App Services](https://docs.microsoft.com/en-us/azure/app-service/tutorial-python-postgresql-app?tabs=bash%2Cclone)
+- [Armar una API básica en Django con Azure](https://stories.mlh.io/deploying-a-basic-django-app-using-azure-app-services-71ec3b21db08)
+- [Serie de videos de Microsoft sobre APIs en Django con Azure](https://channel9.msdn.com/shows/Azure-Friday/Python-on-Azure-Part-1-Building-Django-apps-with-Visual-Studio-Code?ocid=AID754288&wt.mc_id=CFID0237)
