@@ -11,6 +11,8 @@ principal: false
 
 Acá pueden encontrar ejemplos para todas las requests que vamos a usar durante el curso. Es una recopilación para que sea más cómodo encontrar que requests hay.
 
+La URL de la API de producción es: https://csitba.azurewebsites.net
+
 Requests:
 
 ## Auth
