@@ -44,7 +44,13 @@ curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts/ID
 
 ### Borrar usuario:
 ```bash
-curl -X DELETE -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts/1
+curl -X DELETE -H "Authorization: JWT TOKEN" http://localhost:8000/api/accounts/ID
+```
+
+### Actualizar usuario
+Sirve para cambiar el balance o el rol:
+```bash
+curl -i -X PUT -H "Authorization: JWT TOKEN" -H "Content-Type: application/json" http://localhost:8000/api/accounts/ID -d '{"balance": BALANCE,"email": "EMAIL","groups": [{"name": "GRUPO"}],"id": ID,"username": "USERNAME"}'
 ```
 
 ## Transacciones
