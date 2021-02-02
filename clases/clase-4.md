@@ -12,7 +12,35 @@ principal: false
 En esta clase vamos a ver como armar acciones para el usuario, envío de mails y un caso real de API en Django.
 
 Los temas de esta clase son:
-TODO TEMAs
+- [Perfil del Usuario](#perfil-del-usuario)
+    * [Serializers](#serializers)
+    * [Permisos](#permisos)
+    * [View Funcional](#view-funcional)
+    * [Probando el endpoint](#probando-el-endpoint)
+- [Agregar Fondos](#agregar-fondos)
+    * [Serializer](#serializer)
+    * [View Funcional](#view-funcional-1)
+    * [Probando el Endpoint](#probando-el-endpoint)
+- [Mailing](#mailing)
+    * [Cómo funciona](#cómo-funciona)
+    * [Configuración](#configuración)
+    * [Templates](#templates)
+    * [Envío de mails](#envío-de-mails)
+    * [Creación de usuario sin verificar](#creación-de-usuario-sin-verificar)
+    * [Cómo verificar la cuenta](#cómo-verificar-la-cuenta)
+    * [Probamos la verificación](#probamos-la-verificación)
+- [Caso Real](#caso-real)
+    * [Azure](#azure)
+    * [Cómo se levanta](#cómo-se-levanta)
+    * [Resultado](#resultado)
+    * [Recursos](#recursos)
+- [Cómo seguir a partir de acá](#cómo-seguir-a-partir-de-acá)
+    * [Cambio de contraseña](#cambio-de-contraseña)
+    * [Olvidé mi contraseña](#olvidé-mi-contraseña)
+    * [Subir imágenes](#subir-imágenes)
+    * [Social auth](#social-auth)
+    * [Cambiar la base de datos](#cambiar-la-base-de-datos)
+
 
 ***
 ***
@@ -563,3 +591,54 @@ Hay una gran cantidad de tutoriales de Microsoft que explican como levantar una 
 - [Cómo deployar una API en Django con Azure App Services](https://docs.microsoft.com/en-us/azure/app-service/tutorial-python-postgresql-app?tabs=bash%2Cclone)
 - [Armar una API básica en Django con Azure](https://stories.mlh.io/deploying-a-basic-django-app-using-azure-app-services-71ec3b21db08)
 - [Serie de videos de Microsoft sobre APIs en Django con Azure](https://channel9.msdn.com/shows/Azure-Friday/Python-on-Azure-Part-1-Building-Django-apps-with-Visual-Studio-Code?ocid=AID754288&wt.mc_id=CFID0237)
+
+*** 
+
+## Cómo seguir a partir de acá
+
+Hay todavía muchas cosas que se le pueden agregar a una API en general y en particular también a esta.
+
+### Cambio de contraseña
+
+Faltaría poder gestionar un cambio de contraseña, esto se puede hacer de dos manera (teniendo al usuario logueado):
+1. Pidiendo clave nueva + confirmación junto con la contraseña actual
+2. Pidiendo clave nueva + confirmación SIN contraseña actual
+
+[Acá](https://medium.com/django-rest/django-rest-framework-change-password-and-update-profile-1db0c144c0a3) hay un tutorial que se puede seguir al respecto.
+
+### Olvidé mi contraseña
+
+¿Qué pasa en nuestra API si un usuario se olvida la clave? --> Se tiene que crear otra cuenta
+
+Todas las APIs deberían permitir olvidarse la clave. Esto se podría solucionar con 2 endpoints:
+1. Un endpoint que recibe el mail del usuario que se olvidó la clave y le envía un código de verificación
+2. Un endpoint que recibe el código de verificación + la clave nueva + confirmación para autorizar el cambio
+
+[Acá](https://learndjango.com/tutorials/django-password-reset-tutorial) hay un tutorial sobre como se puede hacer algo así. La lógica de envío de mail ya está hecha, por lo que es menos trabajo.
+
+### Subir imágenes
+
+Se puede agregar que cada usuario tenga una foto de perfil (en el caso de que usamos la API con la terminal no sirve mucho, pero si lo llevamos a un lugar con interfaz visual que usa nuestra API, estaría bueno).
+
+Se puede hacer con un endpoint específico para subir la foto requerida y se puede agregar el campo en un *Form* de manera simple.
+
+[Acá](https://docs.djangoproject.com/en/3.1/topics/http/file-uploads/) hay un tutorial sobre como hacerlo, es corto y simple.
+
+### Social auth
+
+Sería un buen agregado poder loguearse a nuestra API usando Google, Facebook, Twitter, Instagram o cualquier red social que lo permita. En Django se llama "Social Login" o "Social Auth".
+
+Esto se puede implementar en Django, hay librerías que permiten usar la autenticación con estos servicios. Si bien no tiene mucho sentido sin una interfaz visual y el botón de *"Log in with Google"*, se puede implementar el código que lo hace y luego hacer la parte visual.
+
+[Acá](https://python-social-auth.readthedocs.io/en/latest/configuration/django.html) y [acá](https://simpleisbetterthancomplex.com/tutorial/2016/10/24/how-to-add-social-login-to-django.html) hay 2 tutoriales que explican como hacerlo. El proceso es simple del lado del backend.
+
+### Cambiar la base de datos
+
+Como vimos en el caso real, se puede cambiar la base de datos que usa Django. Originalmente viene con SQLite, pero lo pasamos a PostgreSQL en el otro ejemplo.
+
+Cada base de datos tiene sus ventajas y desventajas. Por ejemplo, SQLite corre en 1 solo thread, por lo que muchas requests simultaneas a nuestra API van a ser **MUY** lentas, pero PostgreSQL tiene una gran performance en multi-threading, por lo que sería una mucho mejor opción.
+
+También se pueden usar bases NoSQL, Django también las soporta.
+
+[Acá](https://www.enterprisedb.com/postgres-tutorials/how-use-postgresql-django) hay un tutorial sobre como cambiar a PostgreSQL, y [acá](https://www.djongomapper.com/integrating-django-with-mongodb/#:~:text=When%20migrating%20an%20existing%20Django,in%20your%20settings.py%20file.&text=Run%20manage.py%20makemigrations%20%3Cmyapp,followed%20by%20manage.py%20migrate%20.) hay un tutorial sobre como migrar la base a MongoDB.
+
