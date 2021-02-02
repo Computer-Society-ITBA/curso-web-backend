@@ -293,3 +293,5 @@ Se puede probar también cambiarle el rol a otro usuario (estando con un admin):
 ```bash
 curl -i -X PUT -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIyMjM4NTUsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.nod24byOncyvPmefG5ZGktjugaK9qAoMMFfNPCgl4Ic" -H "Content-Type: application/json" http://localhost:8000/api/accounts/6 -d '{"id":6,"email":"hirschgonzalo+testuser2@gmail.com","username":"testuser2","groups":[{"name":"admin"}],"balance":100.0}'
 ```
+
+Y con esto nuestra API ya está funcionando y tiene todo lo que queríamos.
