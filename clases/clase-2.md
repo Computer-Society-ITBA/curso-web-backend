@@ -46,7 +46,7 @@ Los temas de esta clase son:
 
 Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiéndola, [acá](bases/base-clase-2.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
 
-**NOTA**: Si nos pudiste seguir, no vamos a usar los endpoints de prueba que armamos, así que podes borrar las funciones de la view (`api/views.py`) y los urls (`cs_api/urls.py`) y no tenés que hacer esta configuración.
+**NOTA**: Si nos pudiste seguir, no vamos a usar los endpoints de prueba que armamos, así que podes borrar las funciones de la view (`api/views.py`) y los URLs (`cs_api/urls.py`) y no tenés que hacer esta configuración.
 
 Para poder configurarlo para estar listos vamos a seguir pasos similares a la clase anterior.
 
@@ -426,7 +426,7 @@ REST_FRAMEWORK = {
 ```
 Esto aclara en la configuración que usamos JWT para autenticar a nuestros usuarios.
 
-Ahora hay que agregar 2 urls especiales en `cs_api/urls.py`:
+Ahora hay que agregar 2 URLs especiales en `cs_api/urls.py`:
 ```python
 # Importamos una view especial
 from rest_framework_jwt.views import obtain_jwt_token
