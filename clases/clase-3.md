@@ -40,15 +40,15 @@ Los temas de esta clase son:
 
 ## Setup
 
-Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiendola, [aca](bases/base-clase-3.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
+Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiéndola, [acá](bases/base-clase-3.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
 
 **NOTA**: Si nos pudiste seguir no hace falta esto.
 
 Para poder configurarlo para estar listos vamos a seguir pasos similares a la clase anterior.
 
-Extraer la carpeta del ZIP en donde vayan a dejar el proyecto, y muevanse dentro de la carpeta de *cs_api*.
+Extraer la carpeta del ZIP en donde vayan a dejar el proyecto, y muévanse dentro de la carpeta de *cs_api*.
 
-**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y checkear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
+**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y chequear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
 ```bash
 virtualenv ./cs_env
 source ./cs_env/bin/activate
@@ -65,12 +65,12 @@ Hacemos las migraciones:
 python manage.py makemigrations && python manage.py migrate
 ```
 
-Creamos el superuser de nuevo:
+Creamos el superuser de nuevo (acordate de hacerlo un admin):
 ```bash
 python manage.py createsuperuser
 ```
 
-Corremos la api para ver que todo ande bien:
+Corremos la API para ver que todo ande bien:
 ```bash
 python manage.py runserver
 ```
@@ -284,7 +284,7 @@ def create_transaction(request):
 
 Hay varias cosas para mencionar de este código:
 - Usamos un decorator (`@permission_classes([IsUser])`) para definir el permiso.
-- Usamos una transacción (de base de datos, no nuestro modelo) para poder hacer la operacion. Esto lo hacemos porque la transacción nos asegura que pasa todo o no pasa nada. No queremos que la transacción no ocurra pero a un usuario le saquemos plata, entonces la transacción de la base de datos nos permite hacer esto. Lo que se hace dentro de la transacción está dentro del bloque `with transaction.atomic():` y si hay un error es del tipo `IntegrityError`.
+- Usamos una transacción (de base de datos, no nuestro modelo) para poder hacer la operación. Esto lo hacemos porque la transacción nos asegura que pasa todo o no pasa nada. No queremos que la transacción no ocurra, pero a un usuario le saquemos plata, entonces la transacción de la base de datos nos permite hacer esto. Lo que se hace dentro de la transacción está dentro del bloque `with transaction.atomic():` y si hay un error es del tipo `IntegrityError`.
 
 ### Registrar URL
 
@@ -324,7 +324,7 @@ curl -X POST -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2V
 
 ## Búsqueda
 
-Ahora que ya podemos armar transacciones, estaría bueno poder buscar a usuarios para poder armar las transacciones. Ahora mismo es un poco difícil encontrar al usuario que buscamos, sería más cómodo si pudieramos buscar por el nombre de usuario por ejemplo.
+Ahora que ya podemos armar transacciones, estaría bueno poder buscar a usuarios para poder armar las transacciones. Ahora mismo es un poco difícil encontrar al usuario que buscamos, sería más cómodo si pudiéramos buscar por el nombre de usuario por ejemplo.
 
 ### Cómo funciona la búsqueda
 
@@ -339,7 +339,7 @@ Vamos a definir un *Query Param* que le vamos a enviar a al endpoint para que pu
 Dentro de los muchos métodos que Django provee para nuestros modelos, hay una gran cantidad que son para realizar [queries](https://docs.djangoproject.com/en/3.1/topics/db/queries/) (o búsquedas), los más usados son:
 - `all()` --> Sirve para buscar todos los objetos para un modelo, se llama como `Model.objects.all()`
 - `filter(...)` --> Sirve para quedarse con los objetos que cumplen cierta condición, se llama como `Model.objects.filter(...)`
-- `exclude(...)` --> Es como `filter` pero te quedás con los que NO cumplen cierta condición, se llama como `Model.objects.exclude(...)`
+- `exclude(...)` --> Es como `filter`, pero te quedas con los que NO cumplen cierta condición, se llama como `Model.objects.exclude(...)`
 - `get(...)` --> Sirve para obtener *1 solo* objeto, si hay más de uno da un error, se llama como `Model.objects.get(...)`
 
 Los métodos `filter` y `exclude` son métodos de querying, entonces lo que se puede hacer es especificar condiciones, como por ejemplo que sea mayor o que contenga cierta palabra. Estas condiciones se agregan de la siguiente forma a los métodos:
@@ -403,7 +403,7 @@ Y también nuestra API ahora va a devolver algo más además de los resultados, 
 - **next** --> Link a la página siguiente
 - **last** --> Link a la última página
 
-**NOTA**: Es importante darle a los datos paginados algún orden para que siempre que se pida la misma página se obtengan los mismos resultados. En nuestro caso podemos ordenar usuarios por ID (siendo que van a estar ordenados por orden de creación) y las transacciones por fecha de realizacón, ambos ordenes descendentes.
+**NOTA**: Es importante darle a los datos paginados algún orden para que siempre que se pida la misma página se obtengan los mismos resultados. En nuestro caso podemos ordenar usuarios por ID (siendo que van a estar ordenados por orden de creación) y las transacciones por fecha de realización, ambos órdenes descendentes.
 
 ### Django y paginación
 
@@ -541,7 +541,7 @@ def get_accounts(request):
 
 Usamos la función `extract_paging_from_request` para extraer los query param de paginación, luego dependiendo de si hay un query o no, hacemos el filtro o no. Con los datos, generamos el paginator y nos quedamos con la página que queremos. Serializamos los resultados y agregamos lo headers de paginación a la respuesta.
 
-Para probar lo que se puede hacer es esto (con `-i` podemos ver los headers de la respuesta, y definimos `s=1` para que podamos ver lso resultados.):
+Para probar lo que se puede hacer es esto (con `-i` podemos ver los headers de la respuesta, y definimos `s=1` para que podamos ver los resultados.):
 ```bash
 curl -i -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo1LCJ1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTYxMjEyOTU3MiwiZW1haWwiOiJoaXJzY2hnb256YWxvK3Rlc3R1c2VyMUBnbWFpbC5jb20ifQ.Lteb8xlmcCjCCbYUtcuMR2u06H9TgjnauWQRAVJ94N4" 'http://localhost:8000/api/accounts?p=1&s=1'
 ```
