@@ -605,11 +605,21 @@ USE_TZ = True
 
 Incluir también casos de prueba.
 
+Se debería poder buscar así:
+```bash
+curl -G -H "Authorization: JWT TOKEN" --data-urlencode "inicio=INICIO" --data-urlencode "fin=FIN" 'http://localhost:8000/api/transactions'
+```
+
 ### Ejercicio 2 - Paginación de transacciones
 
 Al endpoint que agregaron en el ejercicio anterior, implementar la paginación para el mismo de la misma manera que para los usuarios. Usar los parámetros `p` y `s` como antes, y se puede utilizar un código muy similar al de los usuarios.
 
 Incluir también casos de prueba.
+
+Se debería poder paginar así:
+```bash
+curl -H "Authorization: JWT TOKEN" http://localhost:8000/api/transactions?p=P&s=S
+```
 
 ***
 
