@@ -52,15 +52,15 @@ Los temas de esta clase son:
 
 ## Setup
 
-Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiendola, [aca](bases/base-clase-4.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
+Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiéndola, [acá](bases/base-clase-4.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
 
 **NOTA**: Si nos pudiste seguir y pudiste hacer los ejercicios no hace falta esto (si no pudiste hacer los ejercicios no hay problema, en el ZIP están resueltos).
 
 Para poder configurarlo para estar listos vamos a seguir pasos similares a la clase anterior.
 
-Extraer la carpeta del ZIP en donde vayan a dejar el proyecto, y muevanse dentro de la carpeta de *cs_api*.
+Extraer la carpeta del ZIP en donde vayan a dejar el proyecto, y muévanse dentro de la carpeta de *cs_api*.
 
-**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y checkear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
+**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y chequear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
 ```bash
 virtualenv ./cs_env
 source ./cs_env/bin/activate
@@ -82,7 +82,7 @@ Creamos el superuser de nuevo (acordate de hacerlo un admin):
 python manage.py createsuperuser
 ```
 
-Corremos la api para ver que todo ande bien:
+Corremos la API para ver que todo ande bien:
 ```bash
 python manage.py runserver
 ```
@@ -165,7 +165,7 @@ Vemos que coincida el usuario al que está dirigida la request y el usuario que 
 
 ### View Funcional
 
-Ahora tenemos que armar la view que se encarga de devolvernos el usuario que queremos. Ya teníamos una view registrada para el url `api/accounts/<id>` con un DELETE, así que vamos a tener que adaptar nuestro código en `api/views.py`:
+Ahora tenemos que armar la view que se encarga de devolvernos el usuario que queremos. Ya teníamos una view registrada para el URL `api/accounts/<id>` con un DELETE, así que vamos a tener que adaptar nuestro código en `api/views.py`:
 ```python
 @api_view(['DELETE', 'GET'])
 @permission_classes([IsOwner | IsAdmin])
@@ -210,11 +210,11 @@ def user_delete(request, id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 ```
 
-Tuvimos que sacarle el `@api_view` y `@permission_classes` a `user_delete()` porque la función que vamos a registrar para la url es `user_specific_view`, y también agregamos en `user_delete()` que se fije que es un admin a mano.
+Tuvimos que sacarle el `@api_view` y `@permission_classes` a `user_delete()` porque la función que vamos a registrar para la URL es `user_specific_view`, y también agregamos en `user_delete()` que se fije que es un admin a mano.
 
 A `user_specific_view` le pusimos que use `@permission_classes([IsOwner | IsAdmin])` para que pueda tener cualquiera de los 2 permisos basados en los roles.
 
-Con la nueva función, hay que cambiar la url en `cs_api/urls.py` para que la use:
+Con la nueva función, hay que cambiar la URL en `cs_api/urls.py` para que la use:
 ```python
 urlpatterns = [
     ...,
@@ -385,7 +385,7 @@ Noten que usamos `os.environ.get('MAIL_PASS')` para importar la contraseña del 
 
 Como vamos a estar enviando emails, podemos usar templates para que los mails sean bonitos. Para hacer esto ya creamos unas templates que pueden bajarse [acá](bases/templates.zip). Ese ZIP tiene 2 archivos dentro de una carpeta `templates`, `emailVerify.html` e `emailVerify.txt`. El primero es la versión HTML de la template, y el segundo es la versión texto de la template, por si no se puede usar HTML. 
 
-Esta carpeta `templates` debería estár adentro de la carpeta `api`.
+Esta carpeta `templates` debería estar adentro de la carpeta `api`.
 
 ### Envío de mails
 
@@ -486,7 +486,7 @@ def activate(request, uidb64, token):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 ```
 
-Y nos falta registrar la url en `cs_api/urls.py` para poder acceder a la función de recién:
+Y nos falta registrar la URL en `cs_api/urls.py` para poder acceder a la función de recién:
 ```python
 urlpatterns = [
     ...,
@@ -494,13 +494,13 @@ urlpatterns = [
 ]
 ```
 
-La url tiene ese formato porque va a recibir como Path Param el id del usuario en base 64 y el token.
+La URL tiene ese formato porque va a recibir como Path Param el id del usuario en base 64 y el token.
 
 ### Probamos la verificación
 
 Ahora podemos crear nuevos usuarios (va a tardar un poco más el endpoint porque está enviando el mail), y pueden ver que cuando tratan de hacer un login sin verificar la cuenta no los deja.
 
-Si crean un usuario nuevo deberían recibir un mail, y al hacer click en el botón les va a aparecer una pantalla fea que tiene un error. Eso es porque deberíamos definir en el endpoint de activación un *Redirect*, pero no tenemos a donde redirigir al usuario, y por ahora no nos importa. Si usaran curl con la url que tiene el botón con un GET, podrían ver que se puede y devuelve el status code apropiado.
+Si crean un usuario nuevo deberían recibir un mail, y al hacer click en el botón les va a aparecer una pantalla fea que tiene un error. Eso es porque deberíamos definir en el endpoint de activación un *Redirect*, pero no tenemos a donde redirigir al usuario, y por ahora no nos importa. Si usaran curl con la URL que tiene el botón con un GET, podrían ver que se puede y devuelve el status code apropiado.
 
 Una ver verificada la cuenta pueden volver a tratar de hacer un login y van a ver que funciona.
 
@@ -610,7 +610,7 @@ Cada caso tiene que llamarse `test_X` donde X es el nombre que queramos, pero si
 
 ### Ejemplos de tests
 
-Vamos a construir algunos simples tests (no muchos). Vamos a armar tests que prueben el login y el recupero de usuarios.
+Vamos a construir algunos simples tests (no muchos). Vamos a armar tests que prueben el login y él recupero de usuarios.
 
 Para probar el login podemos armar 2 `APITestCase`, uno que pruebe diferentes casos de login con un usuario activo y uno que trate diferentes casos con un usuario inactivo (sin verificar):
 ```python
@@ -667,7 +667,7 @@ class InactiveUserLoginTestCase(APITestCase):
 
 En estos tests usamos `assert`s para ver que las cosas den lo esperado. Vemos que el status code sea el correcto y que la respuesta sea correcta. En cada `setup` creamos lo necesario para cada test.
 
-Para probar el recupero de usuarios se pueden armar más casos, pero por simpleza armamos 1 solo:
+Para probar él recupero de usuarios se pueden armar más casos, pero por simpleza armamos 1 solo:
 ```python
 # Prueba casos de traer los usuarios de la API
 class UserRecoveryTestCase(APITestCase):
@@ -772,11 +772,11 @@ Los cambios y acciones no son muchos (son cambios pequeños al código, pero nec
 Por la parte de Azure, es necesario:
 1. Crear una **Azure App Service** para hostear la API, especificando que se usa Python como entorno para correr
 2. Crear una **Azure Database for Postgres** para la base de datos, y guardar los nombres usados
-3. Armar en el **App Service Plan** la pipeline de CI/CD para que se levante automáticamente
+3. Armar en el **App Service Plan** el pipeline de CI/CD para que se levante automáticamente
 
 ### Resultado
 
-Luego de poder deployar todo correctamente, obtenemos una url de nuestra API `https://csitba.azurewebsites.net/`.
+Luego de poder deployar todo correctamente, obtenemos una URL de nuestra API `https://csitba.azurewebsites.net/`.
 
 Esta API actualmente está corriendo, así que se puede usar de la misma manera que veníamos probando nuestra API original.
 
