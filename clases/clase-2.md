@@ -26,7 +26,7 @@ Los temas de esta clase son:
         + [Serializer para el usuario](#serializer-para-el-usuario)
         + [Función en para crear el usuario](#funci-n-en-para-crear-el-usuario)
         + [URL para crear un usuario](#url-para-crear-un-usuario)
-    * [Probando la creación del usuario](#probando-la-creacion-del-usuario)
+    * [Probando la creación del usuario](#probando-la-creación-del-usuario)
     * [Endpoint para obtener usuarios](#endpoint-para-obtener-usuarios)
 - [Autenticación](#autenticación)
     * [Log Out](#log-out)
@@ -44,15 +44,15 @@ Los temas de esta clase son:
 
 ## Setup
 
-Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiendola, [acá](bases/base-clase-2.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
+Vamos a partir de lo que estuvimos armando la clase anterior, así que en caso de que no hayas podido seguir la clase o tuviste problemas siguiéndola, [acá](bases/base-clase-2.zip) podés bajarte una copia del proyecto anterior (va a estar en un ZIP).
 
 **NOTA**: Si nos pudiste seguir, no vamos a usar los endpoints de prueba que armamos, así que podes borrar las funciones de la view (`api/views.py`) y los urls (`cs_api/urls.py`) y no tenés que hacer esta configuración.
 
 Para poder configurarlo para estar listos vamos a seguir pasos similares a la clase anterior.
 
-Extraer la carpeta del ZIP en donde vayan a dejar el proyecto, y muevanse dentro de la carpeta de *cs_api*.
+Extraer la carpeta del ZIP en donde vayan a dejar el proyecto, y muévanse dentro de la carpeta de *cs_api*.
 
-**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y checkear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
+**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y chequear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
 ```bash
 virtualenv ./cs_env
 source ./cs_env/bin/activate
@@ -69,12 +69,12 @@ Hacemos las migraciones:
 python manage.py makemigrations && python manage.py migrate
 ```
 
-Creamos el superuser de nuevo:
+Creamos el superuser de nuevo (acordate de hacerlo un admin):
 ```bash
 python manage.py createsuperuser
 ```
 
-Corremos la api para ver que todo ande bien:
+Corremos la API para ver que todo ande bien:
 ```bash
 python manage.py runserver
 ```
@@ -132,7 +132,7 @@ Siempre van a tener esta forma: `xxxxx.yyyyy.zzzzz` (son más largos, pero tiene
 
 ### Cómo funciona en nuestro caso
 
-En nuestro caso, cuando hagamos un *log in*, la API va a generar un JWT Token para el usuario y es lo que nos responde si el log in fue exitoso.
+En nuestro caso, cuando hagamos un *login*, la API va a generar un JWT Token para el usuario y es lo que nos responde si el login fue exitoso.
 
 Una vez que tenemos el token, cuando hagamos una request a la API, lo primero que va a hacer es ver si tenemos el token y verificar que el contenido es correcto, y después pasa a la función que hace lo que le pedimos a la API.
 
@@ -156,7 +156,7 @@ En Django existe lo que se llaman **Serializers** y **Forms**. En sí, ambos fun
 
 Los [*Serializers*](https://www.django-rest-framework.org/api-guide/serializers/) están hechos más que nada para transformar a los modelos o datos en algo que sea fácilmente renderizable como un JSON o XML. Se les puede agregar validaciones también, y se pueden asociar a un modelo para acceder a campos especiales. Los declaramos en `api/serializers.py`.
 
-Los [*Forms*](https://docs.djangoproject.com/en/3.1/topics/forms/) están hechos con el objetivo de escribir el form en Python y que luego se renderize como un HTML, pero no vamos a usar eso porque estamos armando una API REST. Se les puede agregar validaciones y asociar a modelos. Los declaramos en `api/forms.py`.
+Los [*Forms*](https://docs.djangoproject.com/en/3.1/topics/forms/) están hechos con el objetivo de escribir el form en Python y que luego se renderice como un HTML, pero no vamos a usar eso porque estamos armando una API REST. Se les puede agregar validaciones y asociar a modelos. Los declaramos en `api/forms.py`.
 
 Nosotros vamos a usarlos de la siguiente manera, *Serializers* para devolver datos, y *Forms* para recibir datos. De esta forma, las validaciones solo son necesarias en los *Forms*, y los *Serializers* nos ocupamos de que sean la forma en la que nuestros modelos se representan al exterior.
 
@@ -232,7 +232,7 @@ Para poder armar un endpoint para crear un usuario necesitamos 4 cosas:
 
 #### Form para crear el usuario
 
-El form lo vamos a agregar en `api/forms.py` (si no existe el archivo, lo creamos), y va a tener los siguiente:
+El form lo vamos a agregar en `api/forms.py` (si no existe el archivo, lo creamos), y va a tener lo siguiente:
 ```python
 # Importamos la clase de form para creación de usuario
 from django.contrib.auth.forms import UserCreationForm
@@ -271,7 +271,7 @@ class CreateUserForm(UserCreationForm):
 
 Como hereda de `UserCreationForm`, las validaciones de los campos las hace solas, y utiliza las validaciones default. 
 
-Por cada campo que se define en en `Meta`, existe una función que se puede definir que se llama `clean_CAMPO`, y se ejecuta después de validar al campo en sí. En este momento podemos definir nuestras propias validaciones también, como en este caso, que agregamos una validación para que no se puedan repetir los mails de los usuarios. Si encontramos algo que no nos gusta, hacemos un `raise ValidationError("Email ya en uso.")` para lanzar la excepción.
+Por cada campo que se define en `Meta`, existe una función que se puede definir que se llama `clean_CAMPO`, y se ejecuta después de validar al campo en sí. En este momento podemos definir nuestras propias validaciones también, como en este caso, que agregamos una validación para que no se puedan repetir los mails de los usuarios. Si encontramos algo que no nos gusta, hacemos un `raise ValidationError("Email ya en uso.")` para lanzar la excepción.
 
 #### Serializer para el usuario
 
@@ -318,7 +318,7 @@ def create_account(request):
     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 ```
 
-Es importante notar que como usamos un form, los datos tienen que venir en formato `x-www-form-urlencoded`, que significa que la request viene con un formato especial. Además llamamos al método `is_valid()` del form para que valide nuestros datos, si no lo llamamos nunca los valida. En caso de un error respondemos con los errores y un 400, y sinó respondemos con los datos creados.
+Es importante notar que como usamos un form, los datos tienen que venir en formato `x-www-form-urlencoded`, que significa que la request viene con un formato especial. Además llamamos al método `is_valid()` del form para que valide nuestros datos, si no lo llamamos nunca los valida. En caso de un error respondemos con los errores y un 400, y sino respondemos con los datos creados.
 
 #### URL para crear un usuario
 
@@ -330,7 +330,7 @@ urlpatterns = [
 ]
 ```
 
-### Probando la creacion del usuario
+### Probando la creación del usuario
 
 Volvemos a correr la API (`python manage.py runserver`), y para probar crear usuarios vamos a usar **Curl**, para poder hacer un POST que vaya con el formato de los datos que queremos lo podemos hacer de esta manera:
 ```bash
@@ -445,11 +445,11 @@ curl -X POST -d 'username=testuser&password=Admin123!' http://localhost:8000/api
 
 Es importante notar que se puede configurar con mucha granularidad como funciona la autenticación, y hasta extenderla, pero nosotros nos quedamos con lo que viene de una por simpleza. Pero se puede encontrar más información en la [documentación](https://jpadilla.github.io/django-rest-framework-jwt/).
 
-**NOTA 2**: Nos salteamos la opción de implementar que se puedan refrescar los tokens, no nos vamos a concentrar en eso porque no es tan importante para nuestro uso. Es muy facil de implementar igual, es extremadamente similar al endpoint de login.
+**NOTA 2**: Nos salteamos la opción de implementar que se puedan refrescar los tokens, no nos vamos a concentrar en eso porque no es tan importante para nuestro uso. Es muy fácil de implementar igual, es extremadamente similar al endpoint de login.
 
 ### Log Out
 
-Podrán ver que no implementamos un *Log Out*, ¿por que es eso?
+Podrán ver que no implementamos un *Log Out*, ¿por qué es eso?
 
 Como la API es REST, no guardamos información de los tokens en el servidor, entonces no hay que borrar nada cuando uno quiere dejar de usar la API. Tampoco es necesario invalidar los JWT porque expiran en poco tiempo (en este caso 300 segundos, osea, 5 minutos), y tampoco tendríamos los medios para invalidarlo.
 
@@ -461,7 +461,7 @@ Simplemente si uno quiere hacer un *Log Out* y dejar de usar la API, solo basta 
 
 Ahora ya tenemos **Autenticación**, pero nos hace falta definir **Autorización**, sin eso no sirven nuestros tokens.
 
-Hay varias formas de definir los diferentes permisos y niveles de autorización en los endpoints. Si no definimos nada, por default están protegidos, entonces ahora no podemos crear usuarios porque por default está protegido el endpoint para crear usuarios. Necesitaríamos estár logueados para crear un usuario, y no es muy práctico.
+Hay varias formas de definir los diferentes permisos y niveles de autorización en los endpoints. Si no definimos nada, por default están protegidos, entonces ahora no podemos crear usuarios porque por default está protegido el endpoint para crear usuarios. Necesitaríamos estar logueados para crear un usuario, y no es muy práctico.
 
 Hay varias formas de definir permisos, pero nos vamos a concentrar en 2:
 1. Usando decorators como `@permission_classes` y diferentes permisos --> Mucho más simple, pero hay casos en que no funciona
@@ -526,7 +526,7 @@ Probamos lo siguiente:
   curl http://localhost:8000/api/accounts
   ```
 
-Ya tenemos autorización! :)
+¡Ya tenemos autorización! :)
 
 ***
 
@@ -691,7 +691,7 @@ Ahora podemos volver a correr la API (`python manage.py runserver`) y teniendo e
 curl -X DELETE -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ1c2VybmFtZSI6ImdvbnphbG8iLCJleHAiOjE2MTIxMDgwNDIsImVtYWlsIjoiZ2hpcnNjaEBpdGJhLmVkdS5hciJ9.uNRkEJ1jnzKU6l5dXA2bc4Z5sXJ4DhuQ1fDQNhI-xIU" http://localhost:8000/api/accounts/1
 ```
 
-Y si no le damos un token, le damos el token de un `user` o le damos un id que no existe, tira error:
+Y si no le damos un token, le damos el token de un `user` o le damos un ID que no existe, tira error:
 ```bash
 # Sin token
 curl -X DELETE http://localhost:8000/api/accounts/1
