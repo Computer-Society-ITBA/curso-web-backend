@@ -44,7 +44,7 @@ Una *API* es una **Application Programming Interface**. Básicamente es un inter
 Se puede pensar la siguiente analogía:
 
 ```
-Imaginense que están en un restaurante y tienen un menú para elegir. 
+Imagínense que están en un restaurante y tienen un menú para elegir. 
 La cocina (o "server") va a preparar lo que ustedes pidan. 
 Uno no va directamente a la cocina a pedir comida, necesita de un mozo (o "API") para poder comunicarle su pedido a la cocina. 
 El mozo toma el pedido (o "request") y se lo lleva a la cocina, que una vez que prepara la comida (o "response"), se la devuelve al mozo y el mozo te lo lleva a tu mesa (o "cliente").
@@ -125,15 +125,15 @@ Para que una API sea considerada *REST* o *RESTful* debe cumplir una serie de [c
 
 Hay ciertas convenciones que se siguen para un buen diseño de una API REST.
 1. Las URLs contienen sustantivos solo, no verbos.
-    - Las urls serían del estilo `/api/users` y no `/api/user` o `/api/users/create`
+    - Las URLs serían del estilo `/api/users` y no `/api/user` o `/api/users/create`
 2. Los sustantivos están en plural para consistencia.
 3. Aprovechar los verbos HTTP para hacer que sea más legible.
-    - Para crear un usuario se usa un POST a `/api/users`, de forma que la url es corta y entendible
+    - Para crear un usuario se usa un POST a `/api/users`, de forma que la URL es corta y entendible
     - Si se quiere obtener a todos los usuarios es GET a `/api/users`, pero para un usuario particular es GET a `/api/users/<id>`
 4. Usar los status codes para hacer referencia a los resultados de forma más intuitiva.
     - Si se crea un objeto, por ejemplo, no responder con 200 (OK), responder con 204 (No Content), ya que no hay contenido que se buscó
 
-Si hay una clara jerarquía en las urls, se puede usar, siempre y cuando no quedé muy grande. Por ejemplo, si los usuarios tienen fotos, la jerarquía puede ser `/api/users/<id>/fotos`, pero si cada foto tiene tags, usar `/api/users/<id>/fotos/<pid>/tags` es muy largo y engorroso. En ese caso conviene tener hasta `/api/users/<id>` y `/api/fotos/<pid>/tags`, de forma que queda más simple.
+Si hay una clara jerarquía en las URLs, se puede usar, siempre y cuando no quedé muy grande. Por ejemplo, si los usuarios tienen fotos, la jerarquía puede ser `/api/users/<id>/fotos`, pero si cada foto tiene tags, usar `/api/users/<id>/fotos/<pid>/tags` es muy largo y engorroso. En ese caso conviene tener hasta `/api/users/<id>` y `/api/fotos/<pid>/tags`, de forma que queda más simple.
 
 ***
 
@@ -149,7 +149,7 @@ Instagram, Pinterest y Mozilla, entre otros, usan Django.
 
 Es muy simple crear un proyecto de Django, vamos a empezar por crear nuestro proyecto de API.
 
-**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y checkear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
+**OPCIONAL**: Crear un virtualenv (en este caso usamos *virtualenv*), iniciarlo y chequear que la versión de Python sea 3.x (usamos 3.8.5 en el curso):
 ```bash
 # Crear el env
 virtualenv ./cs_env
@@ -159,7 +159,7 @@ source ./cs_env/bin/activate
 python --version
 ```
 
-En una terminal, muevanse al directorio que quieran usar e instalen django (si tienen experiencia con virtualenvs en Python, es recomendable que lo hagan en un virtualenv):
+En una terminal, muévanse al directorio que quieran usar e instalen django (si tienen experiencia con virtualenvs en Python, es recomendable que lo hagan en un virtualenv):
 ```bash
 pip install django
 ```
@@ -183,7 +183,7 @@ cs_api/
 
 En Django, cada vez que uno hace un cambio a un modelo de la base de datos, tenemos que correr las "migraciones". Estas [migraciones](https://docs.djangoproject.com/en/3.1/topics/migrations/) son la forma de Django de propagar la información a la base de datos.
 
-Ahora, dentro de la primera carpeta "cs_api" (vamos a estar trabajando desde ahi con la terminal desde ahora), corremos el siguiente comando para hacer las migraciones:
+Ahora, dentro de la primera carpeta "cs_api" (vamos a estar trabajando desde ahí con la terminal desde ahora), corremos el siguiente comando para hacer las migraciones:
 ```bash
 python manage.py makemigrations && python manage.py migrate
 ```
@@ -236,9 +236,9 @@ Si se ponen a investigar, van a ver que el único usuario que aparece es el usua
 
 ### Cómo crear la API
 
-Para poder empezar a hacer cosas más interesantes, necesitamos agrergar una aplicación a nuestro proyecto de Django, la API. 
+Para poder empezar a hacer cosas más interesantes, necesitamos agregar una aplicación a nuestro proyecto de Django, la API. 
 
-Para poder hacer esto, vamos a usar el siguiente comando, que se encarga de crear nuestra api que se va a llamar "api":
+Para poder hacer esto, vamos a usar el siguiente comando, que se encarga de crear nuestra API que se va a llamar "api":
 ```bash
 python manage.py startapp api
 ```
@@ -270,7 +270,7 @@ cs_api/
 └── manage.py
 ```
 
-Ahora hay que registrar a nuestra api dentro del archivo `cs_api/settings.py`, y lo hacemos cambiando *INSTALLED_APPS*:
+Ahora hay que registrar a nuestra API dentro del archivo `cs_api/settings.py`, y lo hacemos cambiando *INSTALLED_APPS*:
 ```python
 INSTALLED_APPS = [
     'api.apps.ApiConfig',
@@ -285,16 +285,16 @@ python manage.py runserver
 
 ### Cuáles son los contenidos de lo que creamos
 
-Estuvimos creando muchas cosas, y se agregaron muchos archivos, vamos a ver para que sirve cada uno:
+Estuvimos creando muchas cosas, y se agregaron muchos archivos, vamos a ver para qué sirve cada uno:
 ```
 cs_api/ --> Carpeta del proyecto
-├── api --> Carpeta de nuestra api
+├── api --> Carpeta de nuestra API
 │   ├── __init__.py
 │   ├── admin.py --> Registrar modelos así aparecen en la consola de admin
 │   ├── apps.py --> App que se registra en settings.py
 │   ├── migrations --> Carpeta de migraciones de la base de datos (no modificamos)
 │   │   └── __init__.py
-│   ├── models.py --> Definir modelos de la api
+│   ├── models.py --> Definir modelos de la API
 │   ├── tests.py --> Escribir los tests
 │   └── views.py --> Definir los endpoints
 ├── cs_api --> Carpeta de configuración del proyecto
@@ -312,15 +312,15 @@ cs_api/ --> Carpeta del proyecto
 └── manage.py --> Scripts para correr, migrar y otras cosas (no hace falta modificar)
 ```
 
-Es importante notar que todo lo que es Models, Views y Tests no necesariamente tiene que estar dentro de esos archivos, sinó que puede estar en subcarpetas.
+Es importante notar que todo lo que es Models, Views y Tests no necesariamente tiene que estar dentro de esos archivos, sino que puede estar en subcarpetas.
 
 ***
 
 ## Cómo se arma un endpoint
 
-**¿Qué es un "Endpoint"?**, un "Endpoint" es una URL de la API que decidimos exponer, y que contiene una acción que se puede hacer (el verbo HTTP) sobre un recurso (el especificado por la url)
+**¿Qué es un "Endpoint"?**, un "Endpoint" es una URL de la API que decidimos exponer, y que contiene una acción que se puede hacer (el verbo HTTP) sobre un recurso (el especificado por la URL)
 
-Para poder armar un endpoint, hace falta tener una función dentro de "views" y registrar la función con su url dentro de "urls".
+Para poder armar un endpoint, hace falta tener una función dentro de "views" y registrar la función con su URL dentro de "urls".
 
 ### Instalar DjangoRestFramework
 
@@ -374,13 +374,13 @@ urlpatterns = [
 ]
 ```
 
-La parte `'api/test'` es la url a la que va a estar mappeada nuestra view, para acceder usaríamos `localhost:8000/api/test` con un GET.
+La parte `'api/test'` es la URL a la que va a estar mapeada nuestra view, para acceder usaríamos `localhost:8000/api/test` con un GET.
 
 La parte `views.test_get` indica que la función que usamos es la que definimos antes.
 
-La parte `name='test_get'` sirve como un nombre alternativo a la url, por si se busca referenciarla directo por nombre.
+La parte `name='test_get'` sirve como un nombre alternativo a la URL, por si se busca referenciarla directo por nombre.
 
-Es **importante** notar que el orden de las URLs importa, Django usa la función que primero matchea con la url. Por ejemplo, si tenemos las urls declaradas de esta forma:
+Es **importante** notar que el orden de las URLs importa, Django usa la función que primero matchea con la URL. Por ejemplo, si tenemos las URLs declaradas de esta forma:
 ```python
 urlpatterns = [
     ...
@@ -389,9 +389,9 @@ urlpatterns = [
 ]
 ```
 
-La url `'api/foo/bar'` matchea para la request que vaya a `'api/foo/bar'` y para la que vaya a `'api/foo'`. 
+La URL `'api/foo/bar'` matchea para la request que vaya a `'api/foo/bar'` y para la que vaya a `'api/foo'`. 
 
-En cambio, si definimos las urls de esta forma:
+En cambio, si definimos las URLs de esta forma:
 ```python
 urlpatterns = [
     ...
@@ -404,7 +404,7 @@ Cada request va a matchear bien con la URL que corresponde.
 
 ### Probarlo
 
-Una vez agregada la url, volvemos a correr el proyecto (`python manage.py runserver`) y probamos con Curl el endpoint:
+Una vez agregada la URL, volvemos a correr el proyecto (`python manage.py runserver`) y probamos con Curl el endpoint:
 ```bash
 curl localhost:8000/api/test
 ```
@@ -417,8 +417,8 @@ Deberían obtener esto:
 ## Ejemplos de Endpoints
 
 Hay diferentes formas de pasarle información a un endpoint:
-- Path Params --> Se usa una url de este estilo `/api/users/10`, en donde `10` es el ID del usuario, y es un Path Param
-- Query Params --> Se usa una url de este estilo `/api/users?q=hola&p=1`, en donde hay 2 query params, `q` y `p`, separados por un `&` y separados de la url con un `?`
+- Path Params --> Se usa una URL de este estilo `/api/users/10`, en donde `10` es el ID del usuario, y es un Path Param
+- Query Params --> Se usa una URL de este estilo `/api/users?q=hola&p=1`, en donde hay 2 query params, `q` y `p`, separados por un `&` y separados de la URL con un `?`
 - Body --> Es el cuerpo de la request
 - Form --> El cuerpo de la request, pero va con un formato especial
 
@@ -489,7 +489,7 @@ Además del endpoint que se pide, incluyan diferentes casos para probar (con Cur
 
 ### Ejercicio 1 - Endpoint que Suma
 
-Armar un endpoint GET que tenga la url `/api/suma` que tenga 2 query params (`l` y `r`), y devuelva un JSON con el resultado de esta forma: `{"resultado": N}`. 
+Armar un endpoint GET que tenga la URL `/api/suma` que tenga 2 query params (`l` y `r`), y devuelva un JSON con el resultado de esta forma: `{"resultado": N}`. 
 
 Se debería poder llamar así con Curl:
 ```
@@ -503,7 +503,7 @@ No hace falta validar los parámetros
 
 ### Ejercicio 2 - Endpoint que Suma 2
 
-Armar un endpoint PUT que tenga la url `/api/suma-mas` que reciba en el body, un JSON de esta forma `{"sums": [1, 2, 3, N]}`. Recibe una lista de números que tiene que sumar. Se espera que devuelva un JSON con el resultado de esta forma: `{"resultado": N}`.
+Armar un endpoint PUT que tenga la URL `/api/suma-mas` que reciba en el body, un JSON de esta forma `{"sums": [1, 2, 3, N]}`. Recibe una lista de números que tiene que sumar. Se espera que devuelva un JSON con el resultado de esta forma: `{"resultado": N}`.
 
 Se debería poder llamar así con Curl:
 ```
@@ -515,7 +515,7 @@ curl --header "Content-Type: application/json" -XPUT --data '{"sums":[1,2,3,4,5,
 
 ### Ejercicio 3 - Endpoint Bueno y Malo
 
-Armar un endpoint POST que tenga la url `/api/bueno` que reciba en el body, un JSON de esta forma `{"n": N}` y tenga 1 query param (`limit`). Recibe un único número en el body, y un único número de query param. Se espera que devuelva el código 200 si el número es mayor o igual que el query param `limit`, sinó un codigo 400 si es menor. Por default el limite es 10.
+Armar un endpoint POST que tenga la URL `/api/bueno` que reciba en el body, un JSON de esta forma `{"n": N}` y tenga 1 query param (`limit`). Recibe un único número en el body, y un único número de query param. Se espera que devuelva el código 200 si el número es mayor o igual que el query param `limit`, sino un codigo 400 si es menor. Por default el límite es 10.
 
 Se debería poder llamar así con Curl:
 ```
@@ -537,7 +537,7 @@ HTTP/1.1 200 OK
 
 ## Qué vamos a estar construyendo
 
-Como mencionamos al principio, vamos a armar una API REST Bancaria, que va a tener los siguientes URLs (la base de la api es `/api`):
+Como mencionamos al principio, vamos a armar una API REST Bancaria, que va a tener los siguientes URLs (la base de la API es `/api`):
 - `/accounts` con POST              --> Registrar a un usuario
 - `/accounts` con GET               --> Obtener a los usuarios de la API
 - `/accounts/<id>` con GET          --> Obtener información del usuario especificado
