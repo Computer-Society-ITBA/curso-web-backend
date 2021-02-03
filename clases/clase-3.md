@@ -174,7 +174,7 @@ python manage.py makemigrations && python manage.py migrate
 
 ## Creando transacciones
 
-Vamos a armar nuestro nuevo endpoint para poder crear transacciones. Este endpoint va a estar en la url `api/transactions` con un POST, y recibe en el body un campo `destino` y un campo `cantidad`.
+Vamos a armar nuestro nuevo endpoint para poder crear transacciones. Este endpoint va a estar en la URL `api/transactions` con un POST, y recibe en el body un campo `destino` y un campo `cantidad`.
 
 ### Form
 

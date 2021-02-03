@@ -349,7 +349,7 @@ curl -X POST -F 'username=testuser2' -F 'email=hirschgonzalo+testuser2@gmail.com
 
 Ahora que podemos crear usuarios, vamos a hacer un pequeño endpoint para obtenerlos. Dado que ya tenemos un serializer, no hace falta que armemos otro, podemos usar ese.
 
-Hay que cambiar un poco nuestro código para crear un usuario porque queremos que se pueda usar la url `/api/accounts` con un GET y un POST, pero cuando registramos la URL no podemos definir el método ahí. Entonces tenemos que cambiar un poco para que pueda tomar el caso GET y el caso POST.
+Hay que cambiar un poco nuestro código para crear un usuario porque queremos que se pueda usar la URL `/api/accounts` con un GET y un POST, pero cuando registramos la URL no podemos definir el método ahí. Entonces tenemos que cambiar un poco para que pueda tomar el caso GET y el caso POST.
 
 En `api/views.py` cambiamos el código de esta forma y agregamos una función para listar usuarios:
 ```python
@@ -486,7 +486,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 def accounts_view(request):
 ```
 
-Acá lo que estamos haciendo es decir que para usar la url `api/accounts`, independientemente del método, no hace falta estar autenticado, por eso `AllowAny`. Si quisieramos que cualquiera autenticado pudiera usarlo, usaríamos `IsAuthenticated`.
+Acá lo que estamos haciendo es decir que para usar la URL `api/accounts`, independientemente del método, no hace falta estar autenticado, por eso `AllowAny`. Si quisieramos que cualquiera autenticado pudiera usarlo, usaríamos `IsAuthenticated`.
 
 En nuestro caso queremos que para crear un usuario no haga falta estar logueado, pero cuando querés listar a los usuarios si es necesario, por eso le damos el permiso más abarcativo, que lo usen todos. Necesitamos un poco a mano ahora.
 
