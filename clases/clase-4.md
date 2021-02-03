@@ -1,7 +1,7 @@
 ---
 layout: default
 title:  "Clase 4"
-description: "Clase 4 - Acciones del usuario, mailing y un caso real"
+description: "Clase 4 - Acciones del usuario, mailing, testing y un caso real"
 principal: false
 ---
 
@@ -9,7 +9,7 @@ principal: false
 
 ¡Bienvenidos a la clase número 4!
 
-En esta clase vamos a ver como armar acciones para el usuario, envío de mails y un caso real de API en Django.
+En esta clase vamos a ver como armar acciones para el usuario, envío de mails, como armar tests y un caso real de API en Django.
 
 Los temas de esta clase son:
 - [Perfil del Usuario](#perfil-del-usuario)
@@ -29,6 +29,11 @@ Los temas de esta clase son:
     * [Creación de usuario sin verificar](#creación-de-usuario-sin-verificar)
     * [Cómo verificar la cuenta](#cómo-verificar-la-cuenta)
     * [Probamos la verificación](#probamos-la-verificación)
+- [Testing](#testing)
+    * [Cómo testear](#cómo-testear)
+    * [Setup para tests](#setup-para-tests)
+    * [Tests en Django](#tests-en-django)
+    * [Ejemplos de tests](#ejemplos-de-tests)
 - [Caso Real](#caso-real)
     * [Azure](#azure)
     * [Cómo se levanta](#cómo-se-levanta)
@@ -503,6 +508,201 @@ Para usar un curl con el link del mail pueden hacer:
 ```bash
 curl -i LINK_DEL_MAIL
 ```
+
+***
+
+## Testing
+
+Algo de lo que no se habló durante el curso es sobre **Testing**. Es algo muy importante durante el desarrollo de software en general, pero por temas de tiempo no se pudo ver bien hasta ahora.
+
+*Testing* es automatizar las pruebas que hacemos, de forma que cuando cambiamos algo en nuestra API, nos aseguremos de no romper el código o funcionalidades que ya existen y funcionan.
+
+### Cómo testear
+
+Hay muchos tipos de *test* y muchas formas de implementarlos, algunos son:
+- **Unit Tests** --> Son tests que prueban 1 sola cosa (son usados más que nada para probar una función con distintos valores por ejemplo)   
+- **End to End Test** --> Son tests que prueban todos los componentes al mismo tiempo (son usados más que nada cuando hay un front + back, no en nuestro caso)
+- **Integration Tests** --> Son tests que prueban todo un módulo (son usados más que nada para probar una API por ejemplo)
+
+En Django podemos implementar *Unit Tests* e *Integration Tests*, pero en nuestro caso vamos a usar *Integration Tests* para simular requests a la API para luego ver que lo que esté en la base de datos sea correcto y que responda de forma correcta.
+
+### Setup para tests
+
+Nuestros tests van a ir en `api/tests.py`, aunque se pueden armar carpetas de tests, pero no vamos a armar tantos por ahora.
+
+Antes de poder armar algún test en sí vamos a armar un par de métodos para ayudarnos a testear más fácil, adentro de `api/tests.py` vamos a agregar:
+```python
+from django.contrib.auth.models import Group
+from api import constants, models
+from django.contrib.auth.models import User
+
+# Dado el token, agrega el header a la request
+def api_authorization(obj, token):
+    obj.client.credentials(
+        HTTP_AUTHORIZATION="JWT " + token)
+
+# Crea los diferentes grupos
+def create_groups():
+    group_user = Group.objects.create(name=constants.GROUP_USER)
+    group_admin = Group.objects.create(name=constants.GROUP_ADMIN)
+    return group_user, group_admin
+
+# Crea a un usuario, le pone los grupos
+# Crea la cuenta asociada
+# Recibe:
+# - group -->  grupo que se le pone al usuario
+# - username --> nombre del usuario para usar
+# - active --> define si el usuario está activo
+# - password --> contraseña del usuario
+def create_user(group, username, password, active):
+    # Crea al usuario
+    user = User.objects.create_user(
+        username=username, password=password, is_active=active)
+    # Le pone el grupo
+    user.groups.add(group)
+    # Crea la account relacionada
+    models.Account.objects.create(user=user)
+    return user
+
+# Genera un usuario con un token
+def create_user_with_token(group, username, password, client):
+    # Crea al usuario
+    user = User.objects.create_user(
+        username=username, password=password, is_active=True)
+    # Le pone el grupo
+    user.groups.add(group)
+    # Crea la account relacionada
+    models.Account.objects.create(user=user)
+    # Genera un token
+    user_token = get_jwt_token(client, username, password)
+    return user, user_token
+
+# Hace una request para obtener el token
+def get_jwt_token(client, username, password):
+    # Hace un post para el token
+    response = client.post("/api/auth/login", {"username": username, "password": password}, format='json')
+    return response.data["token"]
+```
+
+Son algunas funciones que nos van a ayudar a poder probar los diferentes endpoints que tenemos. Ayudan a poder crear usuarios fácilmente, agregar el token al header u obtener el token para usar la API.
+
+### Tests en Django
+
+Se pueden definir conjuntos de casos en un `APITestCase`, y cada uno de esos es un `TestCase`. Django crea una base de datos para que los tests no afecten a la base de datos de la aplicación.
+
+Los tests constan de diferentes etapas, pero nosotros nos concentramos más que nada en una, el `setup`. El `setup` es una función que se corre antes de cada caso de test, y nos va a servir para definir que existe en la base de datos al momento de correr el caso.
+
+Los tests tienen esta forma:
+```python
+class CustomTestCaseClass(APITestCase):
+    # Setup
+    def setUp(self):
+        # Crear grupos
+        # Crear usuario
+        # Agregar autenticación
+
+    # caso, tiene que llamarse "test_ALGO"
+    def test_custom_name(self):
+        # Probar codigo
+```
+
+Cada caso tiene que llamarse `test_X` donde X es el nombre que queramos, pero siempre tiene que empezar con `test_`. El `setup` se corre por cada uno de los tests del `APITestCase`.
+
+### Ejemplos de tests
+
+Vamos a construir algunos simples tests (no muchos). Vamos a armar tests que prueben el login y el recupero de usuarios.
+
+Para probar el login podemos armar 2 `APITestCase`, uno que pruebe diferentes casos de login con un usuario activo y uno que trate diferentes casos con un usuario inactivo (sin verificar):
+```python
+from django.test import TestCase
+from django.contrib.auth.models import Group
+from api import constants, models
+from django.contrib.auth.models import User
+from rest_framework.test import APITestCase
+from rest_framework import status
+
+# Prueba casos de logueo donde el usuario está activo
+class ActiveUserLoginTestCase(APITestCase):
+    def setUp(self):
+        u, a = create_groups()
+        self.username = "testuser"
+        self.password = "contraseña123456"
+        self.user = create_user(u, self.username, self.password, True)
+
+    # Prueba el login correcto
+    def test_login_ok(self):
+        data = {"username": self.username, "password": self.password}
+        response = self.client.post("/api/auth/login", data)
+        # Esperamos un 200
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Vemos que no sea vacío el token
+        self.assertNotEquals(response.data["token"], "")
+    
+    # Prueba el login error cuando está mal el usuario o password
+    def test_login_invalid_credentials(self):
+        data = {"username": self.username, "password": "esto está mal"}
+        response = self.client.post("/api/auth/login", data)
+        # Esperamos un 400
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Esperamos que no venga un token en la respuesta
+        self.assertTrue(not "token" in response.data)
+
+# Prueba casos donde el usuario está inactivo
+class InactiveUserLoginTestCase(APITestCase):
+    def setUp(self):
+        u, a = create_groups()
+        self.username = "testuser"
+        self.password = "contraseña123456"
+        self.user = create_user(u, self.username, self.password, False)
+    
+    # Prueba el login error cuando el user está inactivo
+    def test_login_invalid_credentials(self):
+        data = {"username": self.username, "password": self.password}
+        response = self.client.post("/api/auth/login", data)
+        # Esperamos un 400
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Esperamos que no venga un token en la respuesta
+        self.assertTrue(not "token" in response.data)
+```
+
+En estos tests usamos `assert`s para ver que las cosas den lo esperado. Vemos que el status code sea el correcto y que la respuesta sea correcta. En cada `setup` creamos lo necesario para cada test.
+
+Para probar el recupero de usuarios se pueden armar más casos, pero por simpleza armamos 1 solo:
+```python
+# Prueba casos de traer los usuarios de la API
+class UserRecoveryTestCase(APITestCase):
+    def setUp(self):
+        u, a = create_groups()
+        self.username = "testuser"
+        self.password = "contraseña123456"
+        self.user, self.user_token = create_user_with_token(u, self.username, self.password, self.client)
+        api_authorization(self, self.user_token)
+    
+    # Prueba el login error cuando el user está inactivo
+    def test_users_get_ok(self):
+        response = self.client.get("/api/accounts")
+        # Esperamos un 200
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Esperamos que haya 1 solo usuario
+        self.assertEquals(len(response.data), 1)
+
+    # Prueba el error del endpoint si el usuario no tiene token
+    def test_users_get_without_token(self):
+        # Aseguramos que no haya un usuario autenticado
+        self.client.force_authenticate(user=None)
+        response = self.client.get("/api/accounts")
+        # Esperamos un 401
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+```
+
+Usamos la función `self.client.force_authenticate(user=None)` para asegurarnos de que no va a tener un token la request, para generar el error de que falta el token.
+
+Los tests en Django se pueden correr con:
+```bash
+python manage.py test
+```
+
+Hay muchas más cosas que se podrían testear en nuestra API, y es una buena práctica correr los tests cuando hay cambios en la API para evitar romper código existente. Hay más información de testing en la [documentación de Django](https://docs.djangoproject.com/en/3.1/topics/testing/).
 
 ***
 
