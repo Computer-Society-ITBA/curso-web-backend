@@ -24,7 +24,7 @@ Los temas de esta clase son:
     * [Endpoint para crear un usuario](#endpoint-para-crear-un-usuario)
         + [Form para crear el usuario](#form-para-crear-el-usuario)
         + [Serializer para el usuario](#serializer-para-el-usuario)
-        + [Función en para crear el usuario](#funci-n-en-para-crear-el-usuario)
+        + [Función en para crear el usuario](#función-en-para-crear-el-usuario)
         + [URL para crear un usuario](#url-para-crear-un-usuario)
     * [Probando la creación del usuario](#probando-la-creación-del-usuario)
     * [Endpoint para obtener usuarios](#endpoint-para-obtener-usuarios)
@@ -82,7 +82,7 @@ python manage.py runserver
 ***
 ***
 
-## Que es la Autenticación
+## Qué es la Autenticación
 
 Vamos a empezar diferenciando *Autenticación* y *Autorización*.
 

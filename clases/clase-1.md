@@ -250,18 +250,11 @@ cs_api/
 │   ├── __init__.py
 │   ├── admin.py
 │   ├── apps.py
-│   ├── migrations
-│   │   └── __init__.py
 │   ├── models.py
 │   ├── tests.py
 │   └── views.py
 ├── cs_api
 │   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-38.pyc
-│   │   ├── settings.cpython-38.pyc
-│   │   ├── urls.cpython-38.pyc
-│   │   └── wsgi.cpython-38.pyc
 │   ├── asgi.py
 │   ├── settings.py
 │   ├── urls.py
@@ -292,18 +285,11 @@ cs_api/ --> Carpeta del proyecto
 │   ├── __init__.py
 │   ├── admin.py --> Registrar modelos así aparecen en la consola de admin
 │   ├── apps.py --> App que se registra en settings.py
-│   ├── migrations --> Carpeta de migraciones de la base de datos (no modificamos)
-│   │   └── __init__.py
 │   ├── models.py --> Definir modelos de la API
 │   ├── tests.py --> Escribir los tests
 │   └── views.py --> Definir los endpoints
 ├── cs_api --> Carpeta de configuración del proyecto
 │   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-38.pyc
-│   │   ├── settings.cpython-38.pyc
-│   │   ├── urls.cpython-38.pyc
-│   │   └── wsgi.cpython-38.pyc
 │   ├── asgi.py --> Configuraciones (no modificamos)
 │   ├── settings.py --> Configuraciones del proyecto
 │   ├── urls.py --> Urls del proycto
