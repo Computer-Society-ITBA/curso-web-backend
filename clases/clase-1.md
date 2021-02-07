@@ -159,6 +159,8 @@ source ./cs_env/bin/activate
 python --version
 ```
 
+**NOTA**: Si están usando OSx(Mac), para usar Python 3 los comandos se hacen con `pip3` y `python3`.
+
 En una terminal, muévanse al directorio que quieran usar e instalen django (si tienen experiencia con virtualenvs en Python, es recomendable que lo hagan en un virtualenv):
 ```bash
 pip install django
@@ -352,7 +354,7 @@ La función recibe una `request`, que tiene información sobre le HTTP request, 
 
 Una vez creada la view, simplemente hay que importarla en `cs_api/urls.py` y agregarla de la siguiente manera:
 ```python
-import api.views as views
+from api import views
 ...
 urlpatterns = [
     ...

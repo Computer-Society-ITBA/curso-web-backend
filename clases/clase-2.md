@@ -494,7 +494,7 @@ También se puede definir los propios permisos, pero eso más adelante.
 
 ### A mano
 
-Para poder ver a mano los permisos, usamos la `request` que todas las funciones que declaramos reciben. Este objeto `request` tiene a un `User` relacionado, por lo que podemos ver que user está logueado en la `request` (si no hay ningún usuario logueado, el usuario es un `AnonymousUser`, que significa que no está logueado).
+Para poder ver a mano los permisos, usamos la `request` que todas las funciones que declaramos reciben. Este objeto `request` tiene a un `User` relacionado, por lo que podemos ver que user está logueado en la `request` (si no hay ningún usuario logueado, el usuario es un `AnonymousUser`).
 
 Dentro de nuestra función de obtener usuarios podemos ver si el usuario está logueado o no, y devolver una respuesta acorde. En `api/views.py` agregamos:
 ```python
@@ -508,6 +508,8 @@ def get_accounts(request):
     # Agregamos los datos a la respuesta
     return Response(users, status=status.HTTP_200_OK)
 ```
+
+**NOTA**: Dependiendo de la versión de Django la parte `request.user.is_authenticated()` puede ser un atributo y se usa así `request.user.is_authenticated`.
 
 ### Probando la autorización
 
@@ -552,11 +554,6 @@ GROUP_ADMIN = "admin"
 
 Y ahora en el archivo `api/admin.py` vamos a agregar un par de líneas que se ocupan de crear a los grupos:
 ```python
-# Importamos nuestros modelos
-from api import models, constants
-# Importamos el modelo de Group
-from django.contrib.auth.models import Group
-...
 # Importamos nuestros modelos
 from api import models, constants
 # Importamos el modelo de Group
