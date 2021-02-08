@@ -182,6 +182,7 @@ Necesitamos un *Form* porque vamos a estar usando un POST. Adentro de `api/forms
 ```python
 # Importamos los forms
 from django import forms
+from . import models, constants
 
 # Nuestra form extiende de "Form" y no tiene un modelo asociado
 class CreateTransactionForm(forms.Form):
