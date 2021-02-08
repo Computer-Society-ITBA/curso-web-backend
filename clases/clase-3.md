@@ -500,6 +500,7 @@ Del lado de la función en `api/views.py`, hay que hacer unos pequeños cambios 
 ```python
 # Importamos pagination y extractor
 from api import forms, models, serializers, constants, pagination, extractor
+from django.core.paginator import Paginator, EmptyPage
 
 def get_accounts(request):
     # Chequear que no sea anónimo
