@@ -36,6 +36,7 @@ The `index.md` file is the main page file that's shown in the website.
 Here are some resources useful to building the content and structure:
 - [Spell Checking](https://languagetool.org/)
 - [Generating Table of Contents](https://ecotrust-canada.github.io/markdown-toc/)
+- [Implementing Google Analytics](https://github.com/dwyl/learn-google-analytics)
 
 ### Authors
 
