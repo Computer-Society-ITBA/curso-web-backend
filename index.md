@@ -29,4 +29,4 @@ También compilamos todas las requests que vamos a estar haciendo en un solo arc
 
 ### Consultas
 
-Cualquier consulta que tengan pueden usar nuestro [Subreddit Oficial](https://www.reddit.com/r/CursoWebBackendITBA/) y postear ahí sus dudas.
+Cualquier consulta que tengan pueden usar nuestro [Subreddit Oficial](https://www.reddit.com/r/ComputerSocietyITBA) y postear ahí sus dudas.
