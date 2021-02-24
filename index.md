@@ -9,6 +9,10 @@ principal: true
 
 La idea de este curso es aprender a construir una API REST en Django desde cero. Durante el curso vamos a construir una API Bancaria, en donde uno puede registrarse en nuestro banco, ingresar dinero y transferirle a otras personas.
 
+### Temas
+
+Podés encontrar una lista de todos los temas que se van a discutir durante el cursó [acá](clases/clase-temas.md).
+
 ### Setup
 
 Antes de comenzar con el curso, te recomendamos que te fijes la [lista de herramientas necesarias](clases/clase-setup.md). 
