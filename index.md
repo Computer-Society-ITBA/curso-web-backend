@@ -3,6 +3,7 @@ layout: default
 title:  "Curso Web Backend"
 description: "Curso de desarrollo de APIs REST con Django de Computer Society ITBA"
 principal: true
+active: true
 ---
 
 ## Bienvenidos al Curso de Web Backend

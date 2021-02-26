@@ -3,6 +3,7 @@ layout: default
 title:  "Setup"
 description: "Herramientas y configuraciones necesarias para las clases"
 principal: false
+active: true
 ---
 
 # Clase Setup

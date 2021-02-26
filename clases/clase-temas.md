@@ -3,6 +3,7 @@ layout: default
 title:  "Temas"
 description: "Temas a discutir durante el curso"
 principal: false
+active: true
 ---
 
 # Temas
