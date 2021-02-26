@@ -3,6 +3,7 @@ layout: default
 title:  "Clase 2"
 description: "Clase 2 - Usuarios, autenticación y permisos"
 principal: false
+active: false
 ---
 
 # Clase 2
