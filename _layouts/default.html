@@ -48,7 +48,12 @@
     </header>
 
     <main id="content" class="main-content" role="main">
-      {{ content }}
+      {% if page.active == false %}
+        <h2>Esta página todavía no está activa</h2>
+      {% endif %}
+      {% if page.active == true %}
+        {{ content }}
+      {% endif %}
 
       <footer class="site-footer">
         {% if site.github.is_project_page %}
