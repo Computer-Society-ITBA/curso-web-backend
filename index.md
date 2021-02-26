@@ -22,11 +22,13 @@ Antes de comenzar con el curso, te recomendamos que te fijes la [lista de herram
 
 ### Clases
 
-Estas son las clases que ya están disponibles
-- [Clase 1](clases/clase-1.md)
-- [Clase 2](clases/clase-2.md)
-- [Clase 3](clases/clase-3.md)
-- [Clase 4](clases/clase-4.md)
+Todavía no hay clases disponibles, antes de cada clase se va a activar el link correspondiente.
+
+<!-- Estas son las clases que ya están disponibles
+- [Clase 1](clases/clase-1.md) -->
+<!-- - [Clase 2](clases/clase-2.md) -->
+<!-- - [Clase 3](clases/clase-3.md) -->
+<!-- - [Clase 4](clases/clase-4.md) -->
 
 ### Requests
 
