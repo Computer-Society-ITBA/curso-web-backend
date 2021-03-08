@@ -3,7 +3,7 @@ layout: default
 title:  "Clase 1"
 description: "Clase 1 - Teoría de APIs REST e inicialización del Proyecto"
 principal: false
-active: false
+active: true
 ---
 
 # Clase 1
