@@ -3,7 +3,7 @@ layout: default
 title:  "Clase 3"
 description: "Clase 3 - Modelos en Detalle, Búsqueda y Paginación"
 principal: false
-active: false
+active: true
 ---
 
 # Clase 3
