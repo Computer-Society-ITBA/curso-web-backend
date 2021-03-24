@@ -36,6 +36,7 @@ Los temas de esta clase son:
     * [Tests en Django](#tests-en-django)
     * [Ejemplos de tests](#ejemplos-de-tests)
 - [Caso Real](#caso-real)
+    * [AWS](#aws)
     * [Azure](#azure)
     * [Cómo se levanta](#cómo-se-levanta)
     * [Resultado](#resultado)
@@ -711,7 +712,16 @@ Hay muchas más cosas que se podrían testear en nuestra API, y es una buena pr�
 
 Vamos a ver como sería un caso real de uso de la API.
 
-Hoy en día cualquiera puede publicar su código y levantar una API en cuestión de minutos. Nosotros vamos a levantar la API en Azure (de Microsoft).
+Hoy en día cualquiera puede publicar su código y levantar una API en cuestión de minutos. Nosotros vamos a levantar la API en AWS (de Amazon), aunque incluímos como hacerlo en Azure (de Microsoft También).
+
+### AWS
+
+[AWS](https://aws.amazon.com/) es un proveedor de servicios de cómputo en la nube creado por *Amazon* que ofrece una gran variedad de servicios del tipo de:
+- Software as a Service [(SaaS)](https://en.wikipedia.org/wiki/Software_as_a_service)
+- Platform as a Service [(PaaS)](https://en.wikipedia.org/wiki/Platform_as_a_service)
+- Infrastructure as a Service [(IaaS)](https://en.wikipedia.org/wiki/Infrastructure_as_a_service)
+
+AWS se puede usar para levantar nuestra API en la nube, en caso de que queramos llevar nuestra API para un producto.
 
 ### Azure
 
@@ -722,19 +732,25 @@ Hoy en día cualquiera puede publicar su código y levantar una API en cuestión
 
 Azure se puede usar para levantar nuestra API en la nube, en caso de que queramos llevar nuestra API para un producto.
 
-### Cómo se levanta
-
-No vamos a ir muy en detalle sobre como hacer esto porque cuesta plata usar **Azure**, aunque tienen una capa gratuita que se puede utilizar. Hay varios tutoriales sobre como hacerlo más en detalle, vamos a ir muy por arriba explicando los cambios necesarios para poder hacer esto.
-
-Usamos algunos servicios de **Azure** como:
+Si bien vamos a ir en más detalle de que hay que hacer para deployar en AWS, algunos de los servicios de **Azure** que se usarían son:
 - [Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/overview) --> Sirve para hostear la API, permite escalarla
 - [Azure Database for Postgres](https://azure.microsoft.com/en-us/services/postgresql/) --> Va a ser la base de datos de la API
 
-Los cambios y acciones no son muchos (son cambios pequeños al código, pero necesarios para usar *Azure*):
+### Cómo se levanta
+
+No vamos a ir muy en detalle sobre como hacer esto porque cuesta plata usar **AWS**, aunque tienen una capa gratuita que se puede utilizar. Hay varios tutoriales sobre como hacerlo más en detalle, vamos a ir muy por arriba explicando los cambios necesarios para poder hacer esto.
+
+Los servicios de **AWS** que usamos son:
+- [Amazon Elastic Compute Cloud - Amazon EC2](https://aws.amazon.com/ec2/?ec2-whats-new.sort-by=item.additionalFields.postDateTime&ec2-whats-new.sort-order=desc)
+- [Amazon Relational Database Service - Amazon RDS](https://aws.amazon.com/rds/)
+- [Amazon Virtual Private Cloud - Amazon VPC](https://aws.amazon.com/vpc/)
+- [Amazon Route 53](https://aws.amazon.com/route53/)
+
+Los cambios y acciones no son muchos (son cambios pequeños al código, pero necesarios para usar *AWS* o *Azure*):
 1. Tener el código en un repositorio de Github (no tiene que ser github, pero es gratis) --> Es necesario que el código esté en algún lugar en la nube guardado
 2. Cambiar el `ALLOWED_HOSTS` --> Hay que cambiar para que sea `ALLOWED_HOSTS = ['*']
-` porque vamos a tener la arquitectura de **Azure** y es necesario para esto
-3. Cambiar la base de datos --> Vamos a usar PostgreSQL en vez de SQLite (que es la base default), ya que necesitamos un servicio de base de datos y es conveniente que esté todo en el mismo lugar (*Azure*):
+` porque vamos a tener la arquitectura de **AWS** y es necesario para esto
+3. Cambiar la base de datos --> Vamos a usar PostgreSQL en vez de SQLite (que es la base default), ya que necesitamos un servicio de base de datos y es conveniente que esté todo en el mismo lugar (*AWS*/*Azure*):
     1. Instalar [psycopg2](https://pypi.org/project/psycopg2/) para poder conectarse a PostgreSQL
         ```bash
         pip install psycopg2
@@ -753,7 +769,7 @@ Los cambios y acciones no son muchos (son cambios pequeños al código, pero nec
             }
         }
         ```
-    3. Corregir una porción de código vieja que está en `api/admin.py` que genera un error al subir a *Azure*:
+    3. Corregir una porción de código vieja que está en `api/admin.py` que genera un error al subir a *AWS* o *Azure*:
         ```python
         # Importamos el error que no se pudo hacer la operación
         from django.db.utils import ProgrammingError
@@ -770,20 +786,32 @@ Los cambios y acciones no son muchos (son cambios pequeños al código, pero nec
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     ```
 
+Por la parte de AWS, es necesario:
+1. Crear una base de datos Postgres con **Amazon RDS**, creando una nueva **Amazon VPC** que van a usar nuestros servicios.
+2. Crear una instancia de una máquina virtual (VM) con **AWS EC2**, poniendola en la misma *VPC* que la base de datos.
+3. Settear el entorno en la VM de EC2, instalar el repositorio y configurar variables.
+4. Correr el servicio en EC2.
+5. Configurar registros DNS con **Route 53** para que se use el nombre del dominio y no el IP público.
+6. (OPCIONAL) Configurar un flujo para que se deploye solo si ve cambios en el repositorio
+
 Por la parte de Azure, es necesario:
-1. Crear una **Azure App Service** para hostear la API, especificando que se usa Python como entorno para correr
-2. Crear una **Azure Database for Postgres** para la base de datos, y guardar los nombres usados
-3. Armar en el **App Service Plan** el pipeline de CI/CD para que se levante automáticamente
+1. Crear una **Azure App Service** para hostear la API, especificando que se usa Python como entorno para correr.
+2. Crear una **Azure Database for Postgres** para la base de datos, y guardar los nombres usados.
+3. Armar en el **App Service Plan** el pipeline de CI/CD para que se levante automáticamente.
 
 ### Resultado
 
-Luego de poder deployar todo correctamente, obtenemos una URL de nuestra API `https://csitba.azurewebsites.net/`.
+Luego de poder deployar todo correctamente, obtenemos una URL de nuestra API `http://api.gonzalohirsch.com:8000`.
 
 Esta API actualmente está corriendo, así que se puede usar de la misma manera que veníamos probando nuestra API original.
 
-**NOTA:** La versión de la API levantada es una versión hecha hasta la parte de agregar fondos. El repositorio donde se puede encontrar el código de la API adaptado para usarse en Azure es [este](https://github.com/csitba/curso-web-backend-azure).
+**NOTA:** La versión de la API levantada es una versión hecha hasta la parte de agregar fondos. El repositorio donde se puede encontrar el código de la API adaptado para usarse en AWS/Azure es [este](https://github.com/csitba/curso-web-backend-azure).
 
 ### Recursos
+
+De AWS no hay una gran cantidad de documentación sobre como levantar una API en Django, pero hay algunos recursos útiles:
+- [Cómo armar una API en Django con AWS](https://medium.com/saarthi-ai/ec2apachedjango-838e3f6014ab)
+- [Cómo crear una base de datos de Postgres con RDS](https://aws.amazon.com/rds/postgresql/)
 
 Hay una gran cantidad de tutoriales de Microsoft que explican como levantar una API en Django con Azure en mucho más detalle:
 - [Cómo armar una API en Django con PostgreSQL - Medium](https://stackpython.medium.com/how-to-start-django-project-with-a-database-postgresql-aaa1d74659d8)
