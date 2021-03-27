@@ -3,7 +3,7 @@ layout: default
 title:  "Clase 4"
 description: "Clase 4 - Acciones del usuario, mailing, testing y un caso real"
 principal: false
-active: false
+active: true
 ---
 
 # Clase 4

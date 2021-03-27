@@ -26,7 +26,7 @@ Estas son las clases que ya están disponibles (antes de cada clase se va a acti
 - [Clase 1](clases/clase-1.md)
 - [Clase 2](clases/clase-2.md)
 - [Clase 3](clases/clase-3.md)
-<!-- - [Clase 4](clases/clase-4.md) -->
+- [Clase 4](clases/clase-4.md)
 
 ### Requests
 
