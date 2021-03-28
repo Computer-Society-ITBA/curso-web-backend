@@ -725,7 +725,7 @@ AWS se puede usar para levantar nuestra API en la nube, en caso de que queramos 
 
 ### Azure
 
-[Azure](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) es un servicio de cómputo en la nube creado por *Microsoft* que ofrece una gran variedad de servicios del estilo de:
+[Azure](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio), al igual que AWS, es un servicio de cómputo en la nube creado por *Microsoft* que ofrece una gran variedad de servicios del estilo de:
 - Software as a Service [(SaaS)](https://en.wikipedia.org/wiki/Software_as_a_service)
 - Platform as a Service [(PaaS)](https://en.wikipedia.org/wiki/Platform_as_a_service)
 - Infrastructure as a Service [(IaaS)](https://en.wikipedia.org/wiki/Infrastructure_as_a_service)
@@ -745,6 +745,10 @@ Los servicios de **AWS** que usamos son:
 - [Amazon Relational Database Service - Amazon RDS](https://aws.amazon.com/rds/)
 - [Amazon Virtual Private Cloud - Amazon VPC](https://aws.amazon.com/vpc/)
 - [Amazon Route 53](https://aws.amazon.com/route53/)
+
+Usando estos servicios, vamos a tener la siguiente arquitectura:
+
+![Arquitectura Cloud](resources/arquitectura.png "Arquitectura Cloud")
 
 Los cambios y acciones no son muchos (son cambios pequeños al código, pero necesarios para usar *AWS* o *Azure*):
 1. Tener el código en un repositorio de Github (no tiene que ser github, pero es gratis) --> Es necesario que el código esté en algún lugar en la nube guardado
