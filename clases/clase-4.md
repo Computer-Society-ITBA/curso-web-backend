@@ -748,7 +748,7 @@ Los servicios de **AWS** que usamos son:
 
 Usando estos servicios, vamos a tener la siguiente arquitectura:
 
-![Arquitectura Cloud](resources/arquitectura.png "Arquitectura Cloud")
+![Arquitectura Cloud](resources/Arquitectura.png "Arquitectura Cloud")
 
 Los cambios y acciones no son muchos (son cambios pequeños al código, pero necesarios para usar *AWS* o *Azure*):
 1. Tener el código en un repositorio de Github (no tiene que ser github, pero es gratis) --> Es necesario que el código esté en algún lugar en la nube guardado
