@@ -116,6 +116,17 @@ class GroupSerializer(serializers.Serializer):
                 "Grupo Inválido")
         return data
 
+class BalanceSerializer(serializers.Serializer):
+    # Definimos que solo tiene el balance en sí
+    balance = serializers.FloatField(required=True)
+    # Definimos la validación
+    # Validamos con el contexto que el balance no pueda ser menor que el actual
+    def validate(self, data):
+        if data['balance'] < self.context['user'].account.balance:
+            raise serializers.ValidationError(
+                "Balance invalido")
+        return data
+
 class UserDetailsSerializer(serializers.ModelSerializer):
     # Definimos los grupos con un serializer más para controlar la representación
     groups = GroupSerializer(many=True)
@@ -123,20 +134,15 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     email = serializers.CharField(read_only=True)
     username = serializers.CharField(read_only=True)
-    # Definimos balance como un method field porque está asociado a la Account del user
-    balance = serializers.SerializerMethodField()
+    # Definimos la account con un serializer mas para controlar la representacion
+    account = BalanceSerializer(many=False)
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'groups', 'balance')
-
-    # Cuando se define un SerializerMethodField hay que crear un método que sea "get_CAMPO"
-    # donde CAMPO es el nombre del campo que definimos
-    def get_balance(self, obj):
-        return obj.account.balance
+        fields = ('id', 'email', 'username', 'groups', 'account')
 ```
 
-Definimos algunos campos como read_only para que no intente crearlos el serializer, y usamos un `GroupSerializer` para tener control de la información que muestra de los grupos.
+Definimos algunos campos como read_only para que no intente crearlos el serializer, y usamos un `GroupSerializer` para tener control de la información que muestra de los grupos y `BalanceSerializer` para tener control sobre como mostramos la información del balance.
 
 ### Permisos
 
@@ -247,18 +253,9 @@ Vamos a definir 2 comportamientos para el endpoint, los usuarios solo pueden agr
 
 ### Serializer
 
-Ya tenemos un serializer (el que creamos antes), pero necesitamos agregarle una validación para que el balance no pueda ser menor que el actual, en `api/serializers.py` agregamos el siguiente método en `UserDetailsSerializer`:
-```python
-# Agregamos el "validate" para ver que no estén tratando de sacar balance
-def validate(self, data):
-    # Usamos un context, que es algo que se le puede pasar al serializer al momento de instanciarlo
-    if data['balance'] < self.context['user'].account.balance:
-        raise serializers.ValidationError(
-            "Invalid balance, cannot be less than current")
-    return data
-```
+Ya tenemos los serializers que necesitamos creados antes.
 
-Ya tenemos la validación en el `GroupSerializer`, así que no hace falta agregarla.
+Ya tenemos la validación en el `GroupSerializer`, así que no hace falta agregarla. También tenemos la validación en el `BalanceSerializer` para poder chequear el balance.
 
 ### View Funcional
 
